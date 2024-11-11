@@ -1,3 +1,6 @@
 from django.shortcuts import render
 
-# Create your views here.
+from rest_framework.authtoken.models import Token
+
+token = Token.objects.create(user=...)
+print(token.key)
