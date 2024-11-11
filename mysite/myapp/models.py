@@ -1,10 +1,11 @@
 from click import option
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models import CharField
 from rest_framework.authtoken.admin import User
 from rest_framework.viewsets import ModelViewSet
 
-class User(models.Model):
+class User(AbstractUser):
     username = models.CharField(max_length=15)
     password = models.CharField(max_length=50)
     email = models.EmailField()
