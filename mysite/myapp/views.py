@@ -5,18 +5,25 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.viewsets import ModelViewSet
 
-from mysite.myapp.forms import PostForm
-from mysite.myapp.models import Task
-from mysite.myapp.serializers import TaskSerializer
+# from mysite.myapp.forms import PostForm
+from myapp.serializers import TaskSerializer, CommentSerializer
+from myapp.models import Task, Comment
+
 
 
 class TaskViewSet(ModelViewSet):
     serializer_class = TaskSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    queryset = Task.objects.all()
     # permission_classes = [IsAuthenticated]
-    '''filterset_fields = ['price', 'id']
-    search_fields = ['name', 'author_name']
-    ordering_fields = ['price', 'author_name']'''
+    filterset_fields = ['status']
+    search_fields = ['created_at', 'assignee.id']
+    #ordering_fields = ['price', 'author_name']
+
+
+class CommentViewSet(ModelViewSet):
+    serializer_class = CommentSerializer
+    queryset = Comment.objects.all()
 
 """def task_edit(request, pk):
     post = get_object_or_404(Task, pk=pk)
