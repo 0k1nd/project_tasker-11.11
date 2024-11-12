@@ -10,18 +10,18 @@ class RegisterView(APIView):
   queryset = User.objects.all()
   permission_classes = (AllowAny,)
   serializer_class = RegistrationSerializer
+  @api_view(['POST',])
 
-@api_view(['POST',])
-def registration_view(request):
+  def registration_view(request):
 
-  if request.method == 'POST':
-    serializer = RegistrationSerializer(data=request.data)
-    data = {}
-    if serializer.is_valid():
-      user = serializer.save()
-      data['response'] = "successfully registered a new user."
-      data['email'] = user.email
-      data['username'] = user.username
-    else:
-      data = serializer.errors
-    return Response(data)
+    if request.method == 'POST':
+      serializer = RegistrationSerializer(data=request.data)
+      data = {}
+      if serializer.is_valid():
+        user = serializer.save()
+        data['response'] = "successfully registered a new user."
+        data['email'] = user.email
+        data['username'] = user.username
+      else:
+        data = serializer.errors
+      return Response(data)
