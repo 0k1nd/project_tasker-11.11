@@ -1,30 +1,27 @@
-from django.shortcuts import render
-from rest_framework import generics
+from rest_framework.authtoken.admin import User
+from rest_framework.decorators import api_view
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from rest_framework.authtoken.models import Token
-from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
-from rest_framework_simplejwt.views import TokenObtainPairView
-from .serializers import MyTokenObtainPairSerializer
-from .models import Project
-from .forms import UserRegistrationForm
+from .serializers import RegistrationSerializer
 
-token = Token.objects.create(user=...)
-print(token.key)
+class RegisterView(APIView):
+  queryset = User.objects.all()
+  permission_classes = (AllowAny,)
+  serializer_class = RegistrationSerializer
 
-class ProjectViewSet(generics.ListAPIView):
-    queryset = Project.objects.all()
-    serializer_class = MyTokenObtainPairSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+@api_view(['POST',])
+def registration_view(request):
 
-class MyObtainTokenPairView(TokenObtainPairView):
-    permission_classes = (AllowAny,)
-    serializer_class = MyTokenObtainPairSerializer
-
-def register(request):
-    if request.method == 'POST':
-        form = UserRegistrationForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-        else:
-            form = UserRegistrationForm()
-    return render(request, 'accounts/register', {'form': form})
+  if request.method == 'POST':
+    serializer = RegistrationSerializer(data=request.data)
+    data = {}
+    if serializer.is_valid():
+      user = serializer.save()
+      data['response'] = "successfully registered a new user."
+      data['email'] = user.email
+      data['username'] = user.username
+    else:
+      data = serializer.errors
+    return Response(data)

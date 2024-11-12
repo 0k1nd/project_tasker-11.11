@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 
-from django.conf.global_settings import AUTH_USER_MODEL
+from django.conf.global_settings import AUTH_USER_MODEL, AUTHENTICATION_BACKENDS
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,6 +28,9 @@ SECRET_KEY = 'django-insecure-hl+!^1we6=!fz5m&!ty7d0a9zdmq-lrf-vg4&yjv53gfse%3$z
 DEBUG = True
 
 ALLOWED_HOSTS = []
+
+AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.ModelBackend"]
+
 
 
 # Application definition
