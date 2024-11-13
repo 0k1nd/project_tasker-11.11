@@ -1,10 +1,10 @@
+from rest_framework.routers import DefaultRouter
 
-from django.urls import path, include
-from rest_framework.routers import SimpleRouter
-from myapp.views import TaskViewSet, CommentViewSet, ProjectCommentViewSet
+from .views import TaskViewSet, CommentViewSet, ProjectCommentViewSet
+#from .routers import CustomRouter
 
-router = SimpleRouter()
-router.register(r'tasks', TaskViewSet, basename='user')
+router = DefaultRouter()
+router.register(r'tasks', TaskViewSet)
 router.register(r'comments', CommentViewSet)
 router.register(r'projects', ProjectCommentViewSet)
 urlpatterns = [

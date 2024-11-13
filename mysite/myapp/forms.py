@@ -1,9 +1,15 @@
 from django import forms
 
-from mysite.myapp.models import Task
+from myapp.models import Task, Project
 
+from django import forms
+
+class PostFormProject(forms.ModelForm):
+    class Meta:
+        model = Project
+        fields = ('name', 'description', 'editors')
 
 class PostForm(forms.ModelForm):
     class Meta:
         model = Task
-        fields = ('title', 'description', 'status')
+        fields = ('name', 'description', 'status')

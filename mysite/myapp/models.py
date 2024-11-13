@@ -9,7 +9,7 @@ class Account(models.Model):
     password = models.CharField(max_length=50)
 
     def __str__(self):
-        return f"{self.username}"
+        return f"id {self.id} {self.username}"
 
 STATUS_CHOICES =(
     (1, "new"),
@@ -20,10 +20,14 @@ STATUS_CHOICES =(
 class Project(models.Model):
     name = models.CharField(max_length=15)
     description = models.TextField()
-    created_at = models.DateTimeField(blank=True, null=True, default=timezone.now)
+    created_at = models.DateTimeField(blank=True, null=True)
     updated_at = models.DateTimeField(auto_now_add=True)
     owner = models.ForeignKey(User,on_delete=models.SET_NULL, null=True)
     editors = models.ManyToManyField(Account, related_name='editable_objects', blank=True, null=True)
+
+
+    def __str__(self):
+        return f"{self.name} {self.editors_set}"
 
 
 

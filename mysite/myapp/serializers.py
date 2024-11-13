@@ -25,7 +25,8 @@ class ProjectSerializer(ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ['id', 'name', 'tasks', 'description']
+        fields = ['id', 'name', 'tasks','editors', 'description']
+        annotated_tasks = serializers.IntegerField(read_only=True)
 
     def get_tasks(self):
         return Task.objects.filter(project=model.id)
@@ -40,3 +41,4 @@ class ProjectUserSerializer(ModelSerializer):
 
     def get_editors(self):
         return Task.objects.filter(project=model.id)
+
