@@ -1,14 +1,13 @@
 from django.urls import path
-from views import registration_view
+from rest_framework_simplejwt.views import TokenVerifyView
 
+from .forms import RegistrationForm
+from .views import registration_view
 app_name = "user"
 
 urlpatterns = [
-    path('register', registration_view, name="register")
+    path('register/', registration_view, name="register"),
+    path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
 ]
 
 
-# from rest_framework_simplejwt.views import (
-#     TokenObtainPairView,
-#     TokenRefreshView,
-# )

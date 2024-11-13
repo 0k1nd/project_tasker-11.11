@@ -8,12 +8,13 @@ from social_core.pipeline import user
 
 
 class RegistrationForm(forms.ModelForm):
-    password = forms.CharField(label='Password', widget=forms.PasswordInput)
-    password2 = forms.CharField(label='Repeat password', widget=forms.PasswordInput)
-
     class Meta:
         model = Registration
         fields = ('username', 'email', 'password')
+
+    email = forms.EmailField(label='email', widget=forms.EmailInput)
+    password = forms.CharField(label='password', widget=forms.PasswordInput)
+    password2 = forms.CharField(label='repeat password', widget=forms.PasswordInput)
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -23,36 +24,20 @@ class RegistrationForm(forms.ModelForm):
             user.save()
         return user
 
-class LoginForm(forms.Form):
+
+class LoginForm(forms.ModelForm):
     class Meta:
         model = Login
-        fields = ('email', 'password')
+        fields = ('username', 'email', 'password')
 
-    username = forms.CharField(label='Username')
-    password = forms.CharField(widget=forms.PasswordInput, label='Password')
-
-class CustomUserCreationForm(UserCreationForm):
-    class Meta:
-        model = User
-        fields = ('username', 'email', 'password', 'first_name', 'last_name')
-
-class CustomAuthenticationForm(AuthenticationForm):
-    class Meta:
-        model = User
-        fields = ('username', 'password')
-
-class UserRegistrationForm(forms.ModelForm):
-    email = forms.EmailField(required=True)
-    first_name = forms.CharField(required=True)
-    last_name = forms.CharField(required=True)
-
-    class Meta:
-        model = User
-        fields = ('username', 'email', 'password', 'first_name', 'last_name')
+    email = forms.EmailField(label='email', widget=forms.EmailInput)
+    password = forms.CharField(label='password', widget=forms.PasswordInput)
+    password2 = forms.CharField(label='repeat password', widget=forms.PasswordInput)
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.set_password(self.cleaned_data['password'])
+        user.password = self.cleaned_data['password']
+        user.set_password(user.password)
         if commit:
             user.save()
         return user

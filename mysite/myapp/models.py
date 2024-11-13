@@ -29,24 +29,12 @@ class User(models.Model):
     def __str__(self):
         print (f"{ self.username }")
 
+class Registration(models.Model):
+    username = models.CharField(max_length=255)
+    email = models.EmailField(max_length=255)
+    password = models.CharField(max_length=50)
 
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_auth_token(sender, instance=None, created=False, **kwargs):
-    if created:
-        Token.objects.create(user=instance)
-
-
-# class MySetPasswordForm(SetPasswordForm):
-#
-#     def send_email(self, to_mail):
-#         subject = 'Password changed successfully'
-#         body = 'Your password has been changed successfully'
-#         email = EmailMultiAlternatives(subject, body, None, [send_mail()])
-#         email.send()
-#
-#     def save(self, commit=True):
-#         if commit:
-#             email = email_field_name = User.get_email_field_name()
-#             user_email = getattr(self.user, email_field_name)
-#             self.send_email(user_email)
-#         super().save_(commit=commit)
+class Login(models.Model):
+    username = models.CharField(max_length=255)
+    email = models.EmailField(max_length=255)
+    password = models.CharField(max_length=50)
