@@ -30,12 +30,9 @@ class TokenObtainPairView(APIView):
 
     if email and password:
       user = User.objects.filter(email=email).first()
-      if user and user.check_password(password):
-        refresh = RefreshToken.for_user(user)
-        return response.Response({
-          'refresh': str(refresh),
-          'access': str(refresh.access_token),
-        })
-      return response.Response({'error': 'Укажите правильный пароль или почту'}, status=status.HTTP_401_UNAUTHORIZED)
-
-    return response.Response({'error': 'Поля email и пароль обязательны'}, status=status.HTTP_401_UNAUTHORIZED)
+      refresh = RefreshToken.for_user(user)
+      return response.Response({
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+      })
+    return response.Response({'error': 'Поля email и пароль обязательны!'}, status=status.HTTP_401_UNAUTHORIZED)

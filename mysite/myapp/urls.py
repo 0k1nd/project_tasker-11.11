@@ -9,5 +9,3 @@ urlpatterns = [
     path('login/', TokenObtainPairView.as_view(), name="login"),
     path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
 ]
-
-
