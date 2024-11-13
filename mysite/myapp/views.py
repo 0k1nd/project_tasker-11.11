@@ -1,51 +1,28 @@
-from django.contrib.auth import get_user_model
 from rest_framework import status, response
 from rest_framework.authtoken.admin import User
-from rest_framework.decorators import api_view
 from rest_framework.permissions import AllowAny
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from .serializers import UserSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenObtainPairView
-from urllib3 import request
 
-from .serializers import RegistrationSerializer
+class RegistrationAPIView(APIView):
 
-User = get_user_model()
-
-class RegisterView(APIView):
-  queryset = User.objects.all()
-  permission_classes = (AllowAny,)
-  serializer_class = RegistrationSerializer
-
-@api_view(['POST',])
-def registration_view(self, request):
-
-  if request.method == 'POST':
-    serializer = RegistrationSerializer(data=request.data)
-    data = {}
+  def post(self, request):
+    serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
       user = serializer.save()
-      data['response'] = "successfully registered a new user."
-      data['email'] = user.email
-      data['username'] = user.username
-      return Response(serializer.data, status=status.HTTP_201_CREATED)
-    else:
-      data = serializer.errors
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
-  @classmethod
-  def get_token(cls, user):
-    token = super(MyTokenObtainPairSerializer, cls).get_token(user)
-    token['username'] = user.username
-    return token
-
+      refresh = RefreshToken.for_user(user)
+      return Response({
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+      }, status=status.HTTP_201_CREATED)
 
 class TokenObtainPairView(APIView):
   permission_classes = (AllowAny,)
-  serializer_class = RegistrationSerializer
+  serializer_class = UserSerializer
 
   def post(self, request, *args, **kwargs):
     email = request.data.get('email')
@@ -59,5 +36,6 @@ class TokenObtainPairView(APIView):
           'refresh': str(refresh),
           'access': str(refresh.access_token),
         })
+      return response.Response({'error': 'Укажите правильный пароль или почту'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    return response.Response({'error': 'Error'}, status=status.HTTP_401_UNAUTHORIZED)
+    return response.Response({'error': 'Поля email и пароль обязательны'}, status=status.HTTP_401_UNAUTHORIZED)
