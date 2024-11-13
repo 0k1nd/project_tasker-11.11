@@ -7,6 +7,7 @@ app_name = "user"
 
 urlpatterns = [
     path('register/', registration_view, name="register"),
+    path('login/', registration_view, name="login"),
     path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
 ]
 
