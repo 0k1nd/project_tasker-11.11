@@ -1,13 +1,12 @@
 from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy
-from rest_framework import status, response
+from rest_framework import response
 from rest_framework.authtoken.admin import User
 from rest_framework.permissions import AllowAny
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .serializers import UserSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from .forms import UserForgotPasswordForm, UserSetNewPasswordForm

@@ -1,7 +1,4 @@
-from django import forms
 from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
-from django.contrib.auth.models import User
-from .models import Project
 
 class UserForgotPasswordForm(PasswordResetForm):
     def __init__(self, *args, **kwargs):
