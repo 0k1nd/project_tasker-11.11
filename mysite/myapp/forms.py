@@ -24,18 +24,5 @@ class RegistrationForm(forms.ModelForm):
             user.save()
         return user
 
-
-class LoginForm(forms.ModelForm):
-    class Meta:
-        model = Login
-        fields = ('email', 'password')
-
-    email = forms.EmailField(label='email', widget=forms.EmailInput)
-    password = forms.CharField(label='password', widget=forms.PasswordInput)
-    def save(self, commit=True):
-        user = super().save(commit=False)
-        user.password = self.cleaned_data['password']
-        user.set_password(user.password)
-        if commit:
-            user.save()
-        return user
+class PasswordResetRequestForm(forms.Form):
+    email = forms.EmailField(label="Email", max_length=254)

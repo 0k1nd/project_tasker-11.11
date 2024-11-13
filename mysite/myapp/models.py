@@ -25,6 +25,8 @@ class User(models.Model):
     username = models.CharField(max_length=255)
     email = models.EmailField(max_length=255)
     password = models.CharField(max_length=50)
+    password2 = models.CharField(max_length=50)
+
 
     def __str__(self):
         print (f"{ self.username }")
