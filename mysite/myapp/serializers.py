@@ -22,6 +22,23 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         return data
 
+class ProjectSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = Project
+        fields = '__all__'
+
+class MemberSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+
+    class Meta:
+        model = Member
+        fields = ['user', 'project', 'role']
+
+class ProjectSummarySerializer(serializers.Serializer):
+    total_tasks = serializers.IntegerField()
+    tasks_by_status = serializers.DictField(child=serializers.IntegerField())
+    active_members = UserSerializer(many=True)
+
 
 class TaskSerializer(ModelSerializer):
     class Meta:
@@ -73,3 +90,6 @@ class TaskCommentSerializer(ModelSerializer):
         
     def get_comments(self):
         return Comment.objects.filter(comments=model.id)
+
+
+

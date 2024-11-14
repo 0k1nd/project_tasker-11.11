@@ -104,6 +104,123 @@ class ProjectViewSet(ModelViewSet):
         projects_task = Count('tasks'), projects_user=Count('editors')
     )
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_project(request):
+    serializer = ProjectSerializers(data=request.data)
+    if serializer.is_valid():
+        serializer.save(owner=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@login_required
+def edit_project(request, project_id):
+    project = Project.objects.get(id=project_id)
+    if request.user == project.owner:
+        if request.method == 'POST':
+            form = ProjectForm(request.POST, instance=project)
+            if form.is_valid():
+                form.save()
+                return redirect('project_detail', project_id=project.id)
+        else:
+            return redirect('permission_denied')
+    else:
+        return redirect('permission_denied')
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_projects(request):
+    projects = Project.objects.filter(owner=request.user)
+    serializer = ProjectSerializers(projects, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def project_detail(request, pk):
+    project = get_object_or_404(Project, pk=pk, owner=request.user)
+    serializer = ProjectSerializers(project)
+    return Response(serializer.data)
+
+@api_view(['PUT', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def update_project(request, pk):
+    project = get_object_or_404(Project, pk=pk, owner=request.user)
+    serializer = ProjectSerializers(project, data=request.data, partial=True)  # partial=True для PATCH-запроса
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_project(request, pk):
+    project = get_object_or_404(Project, pk=pk, owner=request.user)
+    project.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+class AddMemberView(APIView):
+    permission_classes = [IsAuthenticated, IsProjectAdmin]
+
+    @api_view(['POST'])
+    def post(self, request, id):
+        project = get_object_or_404(Project, id=id)
+        email = request.data.get('email')
+        user = get_object_or_404(User, email=email)
+        if Member.objects.filter(project=project, user=user).exists():
+            return Response({"error": "Пользователь уже участник проекта!"}, status=status.HTTP_400_BAD_REQUEST)
+        Member.objects.create(project=project, user=user)
+        return Response({"message": "Пользователь успешно добавлен!"}, status=status.HTTP_201_CREATED)
+
+class RemoveMemberView(APIView):
+    permission_classes = [IsAuthenticated, IsProjectAdmin]
+
+    @api_view(['POST'])
+    def post(self, request, id):
+        project = get_object_or_404(Project, id=id)
+        email = request.data.get('email')
+        user = get_object_or_404(User, email=email)
+        membership = Member.objects.filter(project=project, user=user).first()
+        if not membership:
+            return Response({"error": "Пользователь уже не участник проекта!"}, status=status.HTTP_400_BAD_REQUEST)
+        membership.delete()
+        return Response({"message": "Пользователь успешно удален"}, status=status.HTTP_200_OK)
+
+class ListMemberView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @api_view(['GET'])
+    def get(self, request, id):
+        project = get_object_or_404(Project, id=id)
+        if not Member.objects.filter(project=project, user=request.user).exists() and project.admin != request.user:
+            return Response({"error": "Доступ запрещен"}, status=status.HTTP_403_FORBIDDEN)
+        memberships = Member.objects.filter(project=project)
+        serializer = Member(memberships, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class ProjectSummaryView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @api_view(['GET'])
+    def get(self, request, id):
+        project = get_object_or_404(Project, id=id)
+        if not Member.objects.filter(project=project, user=request.user).exists() and project.owner != request.user:
+            return Response({"error": "Доступ запрещен"}, status=403)
+        total_tasks = project.tasks.count()
+        tasks_by_status = {
+            'new': project.tasks.filter(status='new').count(),
+            'in_progress': project.tasks.filter(status='in_progress').count(),
+            'done': project.tasks.filter(status='done').count(),
+        }
+        active_members = User.objects.filter(memberships__project=project).distinct()
+        summary_data = {
+            'total_tasks': total_tasks,
+            'tasks_by_status': tasks_by_status,
+            'active_members': UserSerializer(active_members, many=True).data,
+        }
+
+        serializer = ProjectSummarySerializer(summary_data)
+        return Response(serializer.data, status=200)
+
 class OneProjectViewSet(ModelViewSet):
     queryset = Project.objects.all()
     lookup_field = 'pk'

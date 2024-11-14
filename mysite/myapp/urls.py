@@ -22,6 +22,15 @@ urlpatterns = [
     path('set-new-password/<uidb64>/<token>/', UserPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('project/', ProjectView.as_view(), name='project'),
     path('project/<int:project_id>/edit/', edit_project, name='edit_project'),
+    path('projects/', list_projects, name='list_projects'),
+    path('projects/create/', create_project, name='create_project'),
+    path('projects/<int:pk>/', project_detail, name='project_detail'),
+    path('projects/<int:pk>/update/', update_project, name='update_project'),
+    path('projects/<int:pk>/delete/', delete_project, name='delete_project'),
+    path('projects/<int:id>/add_member/', AddMemberView.as_view(), name='add_member'),
+    path('projects/<int:id>/remove_member/', RemoveMemberView.as_view(), name='remove_member'),
+    path('projects/members/', ListMemberView.as_view(), name='list_members'),
+    path('projects/<int:id>/summary/', ProjectSummaryView.as_view(), name='project_summary'),
 ]
 
 urlpatterns += router.urls
