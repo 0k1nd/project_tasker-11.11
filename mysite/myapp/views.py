@@ -14,13 +14,9 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.contrib.auth.decorators import user_passes_test
-
-# from mysite.myapp.forms import PostForm
-from myapp.serializers import TaskSerializer, CommentSerializer, ProjectSerializer, ProjectUserSerializer
+from myapp.serializers import TaskSerializer, CommentSerializer, ProjectTaskSerializer, ProjectUserSerializer, ProjectSerializer, TaskCommentSerializer
 from myapp.models import Task, Comment, Project, Account
 from django.db.models import Count, Case, When, Avg
-
-from myapp.forms import PostFormProject
 
 
 def user_required():
@@ -43,31 +39,36 @@ class TaskViewSet(viewsets.ModelViewSet):
     filterset_fields = ['status']
     search_fields = ['created_at', 'assignee.id']
     ordering_fields = []
-    """permission_classes = [IsEditor]
 
-    def get_queryset(self):
-        user = self.request.user
-        if not self.request.user.groups.filter(name='editor').exists():
-            queryset = queryset.filter(assignee=self.request.user)
-            return queryset"""
+    @action(detail=False, url_path="comments")
+    def list_comments(self, request):
+        queryset = Task.objects.all()
+        serializer = TaskCommentSerializer(queryset, many=True)
+        return Response(serializer.data)
+
 
 class CommentViewSet(ModelViewSet):
     serializer_class = CommentSerializer
     queryset = Comment.objects.all()
 
-class ProjectCommentViewSet(ModelViewSet):
+class ProjectViewSet(ModelViewSet):
     serializer_class = ProjectSerializer
+    queryset = Project.objects.all().annotate(
+        projects_task = Count('tasks'), projects_user=Count('editors')
+    )
+
+class OneProjectViewSet(ModelViewSet):
     queryset = Project.objects.all()
+    lookup_field = 'pk'
 
     @action(detail=False, url_path="tasks")
-    def list_projects(self, request):
+    def list_projects(self, request, pk):
         model = Project
         print(request.user)
         if request.user.is_authenticated:
-            if Account.objects.filter(editable_objects__id=3) or request.user.is_superuser:
-                queryset = Project.objects.all().annotate(
-                    annotated_likes=Count(Case(When(tasks=True, then=1))))
-                serializer = self.get_serializer(queryset, many=True)
+            if Account.objects.filter(editable_objects__id=4) or request.user.is_superuser:
+                queryset = Project.objects.get(pk=pk)
+                serializer = ProjectTaskSerializer(queryset, many=True)
                 return Response(serializer.data)
             else:
                 return HttpResponse("вас нет в этом проекте")
@@ -76,8 +77,8 @@ class ProjectCommentViewSet(ModelViewSet):
 
 
     @action(detail=False, url_path="users")
-    def list_users(self, request):
-        queryset = Project.objects.all()
+    def list_users(self, request, pk):
+        queryset = Project.objects.filters(pk=pk)
         serializer = ProjectUserSerializer(queryset, many=True)
         return Response(serializer.data)
 

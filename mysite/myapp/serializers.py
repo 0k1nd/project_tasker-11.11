@@ -20,7 +20,7 @@ class AccountSerializer(ModelSerializer):
         fields = ['username', 'email']
 
 
-class ProjectSerializer(ModelSerializer):
+class ProjectTaskSerializer(ModelSerializer):
     tasks = TaskSerializer(many=True)
 
     class Meta:
@@ -40,5 +40,22 @@ class ProjectUserSerializer(ModelSerializer):
         fields = ['id', 'name', 'description', 'editors']
 
     def get_editors(self):
-        return Task.objects.filter(project=model.id)
+        return Account.objects.filter(project=model.id)
 
+
+class ProjectSerializer(ModelSerializer):
+    projects_task = serializers.IntegerField(read_only=True)
+    projects_user = serializers.IntegerField(read_only=True)
+    class Meta:
+        model = Project
+        fields = ['id', 'name', 'description','projects_task', 'projects_user', 'owner']
+
+class TaskCommentSerializer(ModelSerializer):
+    comments = CommentSerializer(many=True)
+
+    class Meta:
+        model = Task
+        fields = '__all__'
+
+    def get_editors(self):
+        return Account.objects.filter(comments=model.id)
