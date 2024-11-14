@@ -1,6 +1,26 @@
 from rest_framework.serializers import ModelSerializer
-from rest_framework import  serializers
+from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth.models import User
 from myapp.models import Task, Comment, Project, Account
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password']
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    username = serializers.CharField(source='user.username')
+    email = serializers.CharField(source='user.email')
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        data['username'] = self.user.username
+        data['email'] = self.user.email
+
+        return data
 
 
 class TaskSerializer(ModelSerializer):
@@ -13,11 +33,6 @@ class CommentSerializer(ModelSerializer):
     class Meta:
         model = Comment
         fields = '__all__'
-
-class AccountSerializer(ModelSerializer):
-    class Meta:
-        model = Account
-        fields = ['username', 'email']
 
 
 class ProjectTaskSerializer(ModelSerializer):
@@ -33,7 +48,7 @@ class ProjectTaskSerializer(ModelSerializer):
 
 
 class ProjectUserSerializer(ModelSerializer):
-    editors = AccountSerializer(many=True)
+    editors = UserSerializer(many=True)
 
     class Meta:
         model = Project
@@ -52,10 +67,9 @@ class ProjectSerializer(ModelSerializer):
 
 class TaskCommentSerializer(ModelSerializer):
     comments = CommentSerializer(many=True)
-
     class Meta:
         model = Task
         fields = '__all__'
-
-    def get_editors(self):
-        return Account.objects.filter(comments=model.id)
+        
+    def get_comments(self):
+        return Comment.objects.filter(comments=model.id)

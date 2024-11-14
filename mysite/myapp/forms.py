@@ -1,15 +1,31 @@
+from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
 from django import forms
+from .models import Project, Member
 
-from myapp.models import Task, Project
-
-from django import forms
-
-class PostFormProject(forms.ModelForm):
+class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
-        fields = ('name', 'description', 'editors')
+        fields = ['name', 'description']
 
-class PostForm(forms.ModelForm):
+class ParticipantForm(forms.ModelForm):
     class Meta:
-        model = Task
-        fields = ('name', 'description', 'status')
+        model = Member
+        fields = ['user', 'role']
+
+class UserForgotPasswordForm(PasswordResetForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields:
+            self.fields[field].widget.attrs.update({
+                'class': 'form-control',
+                'autocomplete': 'off'
+            })
+
+class UserSetNewPasswordForm(SetPasswordForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields:
+            self.fields[field].widget.attrs.update({
+                'class': 'form-control',
+                'autocomplete': 'off'
+            })
