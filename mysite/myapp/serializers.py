@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.models import User
+from .models import Project
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -18,3 +19,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         data['email'] = self.user.email
 
         return data
+
+class ProjectSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = Project
+        fields = '__all__'

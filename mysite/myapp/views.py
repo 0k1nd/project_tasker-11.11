@@ -1,15 +1,21 @@
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy
 from rest_framework import response
 from rest_framework.authtoken.admin import User
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import UserSerializer
+from .serializers import UserSerializer, ProjectSerializers
 from rest_framework_simplejwt.tokens import RefreshToken
-from .forms import UserForgotPasswordForm, UserSetNewPasswordForm
+from .forms import UserForgotPasswordForm, UserSetNewPasswordForm, ProjectForm
+from .models import Project
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .models import Project, Member, ProjectAdmin
+from .forms import ProjectForm, ParticipantForm
 
 
 class RegistrationAPIView(APIView):
@@ -64,3 +70,23 @@ class UserPasswordResetConfirmView(SuccessMessageMixin, PasswordResetConfirmView
     context = super().get_context_data(**kwargs)
     context['title'] = 'Установить новый пароль'
     return context
+
+class ProjectView(APIView):
+  queryset = Project.objects.all()
+  serializer = ProjectSerializers
+  permission_classes = [IsAuthenticatedOrReadOnly]
+
+@login_required
+def edit_project(request, project_id):
+    project = Project.objects.get(id=project_id)
+    if request.user == project.owner:
+        if request.method == 'POST':
+            form = ProjectForm(request.POST, instance=project)
+            if form.is_valid():
+                form.save()
+                return redirect('project_detail', project_id=project.id)
+        else:
+            form = ProjectForm(instance=project)
+        return render(request,'',{'form': form, 'project': project})
+    else:
+        return redirect('permission_denied')
