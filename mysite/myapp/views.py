@@ -49,18 +49,13 @@ class ProjectViewSet(ModelViewSet):
         projects_task = Count('tasks'), projects_user=Count('editors')
     )
 
-class OneProjectViewSet(ModelViewSet):
-    queryset = Project.objects.all()
-    lookup_field = 'pk'
-
     @action(detail=False, url_path="tasks")
     def list_projects(self, request, pk):
-        model = Project
-        print(request.user)
+        project = Project.objects.get(pk=pk)
         if request.user.is_authenticated:
-            if Account.objects.filter(editable_objects__id=4) or request.user.is_superuser:
-                queryset = Project.objects.get(pk=pk)
-                serializer = ProjectTaskSerializer(queryset, many=True)
+            if request.user.is_superuser:
+                tasks = Task.objects.filter(project=project)
+                serializer = TaskSerializer(tasks, many=True)
                 return Response(serializer.data)
             else:
                 return HttpResponse("вас нет в этом проекте")
