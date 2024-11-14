@@ -1,4 +1,6 @@
+from django.utils import timezone
 from django.db import models
+
 from rest_framework.authtoken.admin import User
 
 class Project(models.Model):
@@ -37,3 +39,28 @@ class ProjectAdmin(models.Model):
 
     def has_permission_to_manage_participants(self):
         return self.is_admin
+
+
+STATUS_CHOICES =(
+    ('new', "new"),
+    ('in_progress', "in_progress"),
+    ('done', "done"),
+)
+
+class Task(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE,blank=True,null=True, related_name="tasks")
+    name = models.CharField(max_length=150)
+    description = models.TextField()
+    status = models.TextField(choices=STATUS_CHOICES)
+    assignee = models.ForeignKey(User, models.SET_NULL,blank=True,null=True)
+    created_at = models.DateTimeField(blank=True, null=True, default=timezone.now)
+    updated_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.name}  {self.status}'
+
+class Comment(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="comments")
+    author = models.ForeignKey(User, models.SET_NULL,blank=True,null=True)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
