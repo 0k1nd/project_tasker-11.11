@@ -1,22 +1,14 @@
-from pickle import FALSE
-
-from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.http import HttpResponse
-from django.shortcuts import render, redirect
-from django.template import context
-from django.utils import timezone
-from django.views.generic import CreateView, UpdateView
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.generics import get_object_or_404
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.contrib.auth.decorators import user_passes_test
 from myapp.serializers import TaskSerializer, CommentSerializer, ProjectTaskSerializer, ProjectUserSerializer, ProjectSerializer, TaskCommentSerializer
 from myapp.models import Task, Comment, Project, Account
-from django.db.models import Count, Case, When, Avg
+from django.db.models import Count
 
 
 def user_required():
