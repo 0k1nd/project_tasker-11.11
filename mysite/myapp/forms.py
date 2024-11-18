@@ -10,28 +10,35 @@ class ProjectForm(forms.ModelForm):
         fields = ['name', 'description']
 
 class UserForgotPasswordForm(PasswordResetForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field in self.fields:
-            self.fields[field].widget.attrs.update({
-                'class': 'form-control',
-                'autocomplete': 'off'
-            })
-
-class UserPasswordResetDoneForm(PasswordResetForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field in self.fields:
-            self.fields[field].widget.attrs.update({
-                'class': 'form-control',
-                'autocomplete': 'off'
-            })
+    email = forms.EmailField(
+        label="Email",
+        max_length=254,
+        widget=forms.EmailInput(
+            attrs={'class': 'form-control',
+                   'placeholder': 'Введите Email',
+                   "autocomplete": "email"}
+        )
+    )
 
 class UserSetNewPasswordForm(SetPasswordForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field in self.fields:
-            self.fields[field].widget.attrs.update({
-                'class': 'form-control',
-                'autocomplete': 'off'
-            })
+    error_messages = {
+        "password_mismatch": "Пароли не совпадают"
+    }
+    new_password1 = forms.CharField(
+        label='Новый пароль',
+        widget=forms.PasswordInput(
+            attrs={'class': 'form-control',
+                   'placeholder': 'Введите новый пароль',
+                   "autocomplete": "new-password"}
+        ),
+        strip=False,
+    )
+    new_password2 = forms.CharField(
+        label='Подтверждение нового пароля',
+        strip=False,
+        widget=forms.PasswordInput(
+            attrs={'class': 'form-control',
+                   'placeholder': 'Подтвердите новый пароль',
+                   "autocomplete": "new-password"}
+        ),
+    )

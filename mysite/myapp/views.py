@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from .serializers import UserSerializer, ProjectTaskSerializer, TaskSerializer, CommentSerializer, ProjectTaskSerializer, ProjectUserSerializer, TaskCommentSerializer, ProjectSerializers
 from rest_framework_simplejwt.tokens import RefreshToken
-from .forms import UserForgotPasswordForm, UserSetNewPasswordForm, ProjectForm, UserPasswordResetDoneForm
+from .forms import UserForgotPasswordForm, UserSetNewPasswordForm, ProjectForm
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
@@ -55,27 +55,12 @@ class TokenObtainPairView(APIView):
     return response.Response({'error': 'Поля email и пароль обязательны!'}, status=status.HTTP_401_UNAUTHORIZED)
 
 class UserForgotPasswordView(SuccessMessageMixin, PasswordResetView):
-  form_class = UserForgotPasswordForm
-  success_url = reverse_lazy('password_reset/done/')
-
-  def get_context_data(self, **kwargs):
-    context = super().get_context_data(**kwargs)
-    context['title'] = 'Запрос на восстановление пароля'
-    return context
-
-class UserPasswordResetDoneView(SuccessMessageMixin, PasswordResetDoneView):
-    form_class = UserPasswordResetDoneForm
-    success_url = 'password_reset/done/'
+    form_class = UserForgotPasswordForm
+    success_url = reverse_lazy('user_app:user_app:password_reset_done')
 
 class UserPasswordResetConfirmView(SuccessMessageMixin, PasswordResetConfirmView):
-  form_class = UserSetNewPasswordForm
-  success_url = 'password_reset/done/'
-  success_message = 'Пароль успешно изменен. Можете авторизоваться на сайте.'
-
-  def get_context_data(self, **kwargs):
-    context = super().get_context_data(**kwargs)
-    context['title'] = 'Установить новый пароль'
-    return context
+    success_url = reverse_lazy('user_app:reset/done/')
+    form_class = UserSetNewPasswordForm
 
 #from myapp.permissions import IsEditor
 
