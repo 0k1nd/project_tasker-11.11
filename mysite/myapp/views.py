@@ -3,15 +3,15 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy
 from rest_framework import response
 from rest_framework.authtoken.admin import User
-from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.decorators import api_view, permission_classes
 from .serializers import UserSerializer, ProjectTaskSerializer, TaskSerializer, CommentSerializer, ProjectTaskSerializer, ProjectUserSerializer, TaskCommentSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from .forms import UserForgotPasswordForm, UserSetNewPasswordForm, ProjectForm
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from .forms import ProjectForm, ParticipantForm
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
@@ -20,7 +20,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.contrib.auth.decorators import user_passes_test
-from myapp.models import Task, Comment, Project, Member, ProjectAdmin
+from myapp.models import Task, Comment, Project, Member
 from django.db.models import Count
 
 class RegistrationAPIView(APIView):
@@ -99,13 +99,13 @@ class CommentViewSet(ModelViewSet):
     queryset = Comment.objects.all()
 
 class ProjectViewSet(ModelViewSet):
-    serializer_class = ProjectSerializer
+    serializer_class = ProjectTaskSerializer
     queryset = Project.objects.all().annotate(
         projects_task = Count('tasks'), projects_user=Count('editors')
     )
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated or IsSuperUser])
 def create_project(request):
     serializer = ProjectSerializers(data=request.data)
     if serializer.is_valid():
@@ -128,21 +128,21 @@ def edit_project(request, project_id):
         return redirect('permission_denied')
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated or IsSuperUser])
 def list_projects(request):
     projects = Project.objects.filter(owner=request.user)
     serializer = ProjectSerializers(projects, many=True)
     return Response(serializer.data)
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated or IsSuperUser])
 def project_detail(request, pk):
     project = get_object_or_404(Project, pk=pk, owner=request.user)
     serializer = ProjectSerializers(project)
     return Response(serializer.data)
 
 @api_view(['PUT', 'PATCH'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated or IsSuperUser])
 def update_project(request, pk):
     project = get_object_or_404(Project, pk=pk, owner=request.user)
     serializer = ProjectSerializers(project, data=request.data, partial=True)  # partial=True для PATCH-запроса
@@ -152,14 +152,14 @@ def update_project(request, pk):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated or IsSuperUser])
 def delete_project(request, pk):
     project = get_object_or_404(Project, pk=pk, owner=request.user)
     project.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 class AddMemberView(APIView):
-    permission_classes = [IsAuthenticated, IsProjectAdmin]
+    permission_classes = [IsAuthenticated or IsSuperUser]
 
     @api_view(['POST'])
     def post(self, request, id):
@@ -172,7 +172,7 @@ class AddMemberView(APIView):
         return Response({"message": "Пользователь успешно добавлен!"}, status=status.HTTP_201_CREATED)
 
 class RemoveMemberView(APIView):
-    permission_classes = [IsAuthenticated, IsProjectAdmin]
+    permission_classes = [IsAuthenticated or IsSuperUser]
 
     @api_view(['POST'])
     def post(self, request, id):
@@ -186,7 +186,7 @@ class RemoveMemberView(APIView):
         return Response({"message": "Пользователь успешно удален"}, status=status.HTTP_200_OK)
 
 class ListMemberView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated or IsSuperUser]
 
     @api_view(['GET'])
     def get(self, request, id):
@@ -198,7 +198,7 @@ class ListMemberView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class ProjectSummaryView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated or IsSuperUser]
 
     @api_view(['GET'])
     def get(self, request, id):

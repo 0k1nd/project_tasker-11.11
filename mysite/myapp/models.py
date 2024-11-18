@@ -23,23 +23,6 @@ class Member(models.Model):
     def __str__(self):
         return f'{self.user.username} - {self.project.name}'
 
-class ProjectAdmin(models.Model):
-    project = models.OneToOneField(Project, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    is_admin = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f'{self.user.username} - Создатель: {self.project.name}'
-
-    def has_permission_to_edit(self):
-        return self.is_admin
-
-    def has_permission_to_delete(self):
-        return self.is_admin
-
-    def has_permission_to_manage_participants(self):
-        return self.is_admin
-
 
 STATUS_CHOICES =(
     ('new', "new"),

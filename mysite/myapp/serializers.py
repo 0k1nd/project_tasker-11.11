@@ -2,7 +2,7 @@ from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.models import User
-from myapp.models import Task, Comment, Project, Account
+from myapp.models import Task, Comment, Project, Member
 
 
 class UserSerializer(serializers.ModelSerializer):
