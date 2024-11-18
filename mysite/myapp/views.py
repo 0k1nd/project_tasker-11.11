@@ -7,7 +7,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAu
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
-from .serializers import UserSerializer, ProjectTaskSerializer, TaskSerializer, CommentSerializer, ProjectTaskSerializer, ProjectUserSerializer, TaskCommentSerializer
+from .serializers import UserSerializer, ProjectTaskSerializer, TaskSerializer, CommentSerializer, ProjectTaskSerializer, ProjectUserSerializer, TaskCommentSerializer, ProjectSerializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from .forms import UserForgotPasswordForm, UserSetNewPasswordForm, ProjectForm
 from django.shortcuts import render, redirect
@@ -19,6 +19,7 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.permissions import IsAdminUser
 from django.contrib.auth.decorators import user_passes_test
 from myapp.models import Task, Comment, Project, Member
 from django.db.models import Count
@@ -105,7 +106,7 @@ class ProjectViewSet(ModelViewSet):
     )
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated or IsSuperUser])
+@permission_classes([IsAuthenticated | IsAdminUser])
 def create_project(request):
     serializer = ProjectSerializers(data=request.data)
     if serializer.is_valid():
@@ -128,21 +129,21 @@ def edit_project(request, project_id):
         return redirect('permission_denied')
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated or IsSuperUser])
+@permission_classes([IsAuthenticated | IsAdminUser])
 def list_projects(request):
     projects = Project.objects.filter(owner=request.user)
     serializer = ProjectSerializers(projects, many=True)
     return Response(serializer.data)
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated or IsSuperUser])
+@permission_classes([IsAuthenticated | IsAdminUser])
 def project_detail(request, pk):
     project = get_object_or_404(Project, pk=pk, owner=request.user)
     serializer = ProjectSerializers(project)
     return Response(serializer.data)
 
 @api_view(['PUT', 'PATCH'])
-@permission_classes([IsAuthenticated or IsSuperUser])
+@permission_classes([IsAuthenticated | IsAdminUser])
 def update_project(request, pk):
     project = get_object_or_404(Project, pk=pk, owner=request.user)
     serializer = ProjectSerializers(project, data=request.data, partial=True)  # partial=True для PATCH-запроса
@@ -152,14 +153,14 @@ def update_project(request, pk):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated or IsSuperUser])
+@permission_classes([IsAuthenticated | IsAdminUser])
 def delete_project(request, pk):
     project = get_object_or_404(Project, pk=pk, owner=request.user)
     project.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 class AddMemberView(APIView):
-    permission_classes = [IsAuthenticated or IsSuperUser]
+    permission_classes = [IsAuthenticated | IsAdminUser]
 
     @api_view(['POST'])
     def post(self, request, id):
@@ -172,7 +173,7 @@ class AddMemberView(APIView):
         return Response({"message": "Пользователь успешно добавлен!"}, status=status.HTTP_201_CREATED)
 
 class RemoveMemberView(APIView):
-    permission_classes = [IsAuthenticated or IsSuperUser]
+    permission_classes = [IsAuthenticated | IsAdminUser]
 
     @api_view(['POST'])
     def post(self, request, id):
@@ -186,7 +187,7 @@ class RemoveMemberView(APIView):
         return Response({"message": "Пользователь успешно удален"}, status=status.HTTP_200_OK)
 
 class ListMemberView(APIView):
-    permission_classes = [IsAuthenticated or IsSuperUser]
+    permission_classes = [IsAuthenticated | IsAdminUser]
 
     @api_view(['GET'])
     def get(self, request, id):
@@ -198,7 +199,7 @@ class ListMemberView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class ProjectSummaryView(APIView):
-    permission_classes = [IsAuthenticated or IsSuperUser]
+    permission_classes = [IsAuthenticated | IsAdminUser]
 
     @api_view(['GET'])
     def get(self, request, id):
