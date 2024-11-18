@@ -196,24 +196,22 @@ class ListMemberView(APIView):
 class ProjectSummaryView(APIView):
     permission_classes = [IsAuthenticated | IsAdminUser]
 
-    @api_view(['GET'])
     def get(self, request, id):
         project = get_object_or_404(Project, id=id)
+
         if not Member.objects.filter(project=project, user=request.user).exists() and project.owner != request.user:
-            return Response({"error": "Доступ запрещен"}, status=403)
+            return Response({"error": "Доступ запрещен"}, status=404)
+
         total_tasks = project.tasks.count()
-        tasks_by_status = {
-            'new': project.tasks.filter(status='new').count(),
-            'in_progress': project.tasks.filter(status='in_progress').count(),
-            'done': project.tasks.filter(status='done').count(),
-        }
-        active_members = User.objects.filter(memberships__project=project).distinct()
         summary_data = {
             'total_tasks': total_tasks,
-            'tasks_by_status': tasks_by_status,
+            'tasks_by_status': {
+                'new': project.tasks.filter(status='new').count(),
+                'in_progress': project.tasks.filter(status='in_progress').count(),
+                'done': project.tasks.filter(status='done').count(),
+            },
             'active_members': UserSerializer(active_members, many=True).data,
         }
-
         serializer = ProjectSummarySerializer(summary_data)
         return Response(serializer.data, status=200)
 

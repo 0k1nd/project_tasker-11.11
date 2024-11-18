@@ -27,10 +27,11 @@ urlpatterns = [
     path('projects/<int:id>/add_member/', AddMemberView.as_view(), name='add_member'),
     path('projects/<int:id>/remove_member/', RemoveMemberView.as_view(), name='remove_member'),
     path('projects/<int:id>/members/', ListMemberView.as_view(), name='list_members'),
-    path('projects/<int:id>/summary/', ProjectSummaryView.as_view(), name='project_summary'),
+    path('projects/<int:id>/summary/', ProjectSummaryView.as_view(), name='project_summary_by_status'),
 ]
 
 urlpatterns += router.urls
+
 
 
 
