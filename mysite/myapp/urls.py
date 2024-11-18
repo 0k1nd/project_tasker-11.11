@@ -26,7 +26,7 @@ urlpatterns = [
     path('projects/<int:pk>/delete/', delete_project, name='delete_project'),
     path('projects/<int:id>/add_member/', AddMemberView.as_view(), name='add_member'),
     path('projects/<int:id>/remove_member/', RemoveMemberView.as_view(), name='remove_member'),
-    path('projects/members/', ListMemberView.as_view(), name='list_members'),
+    path('projects/<int:id>/members/', ListMemberView.as_view(), name='list_members'),
     path('projects/<int:id>/summary/', ProjectSummaryView.as_view(), name='project_summary'),
 ]
 

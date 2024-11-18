@@ -5,6 +5,7 @@ from rest_framework import response
 from rest_framework.authtoken.admin import User
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework import status
+from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from .serializers import UserSerializer, ProjectTaskSerializer, TaskSerializer, CommentSerializer, ProjectTaskSerializer, ProjectUserSerializer, TaskCommentSerializer, ProjectSerializers
@@ -55,11 +56,7 @@ class TokenObtainPairView(APIView):
 
 class UserForgotPasswordView(SuccessMessageMixin, PasswordResetView):
   form_class = UserForgotPasswordForm
-  template_name = 'system/user_password_reset.html'
-  success_url = reverse_lazy('home')
   success_message = 'Письмо с инструкцией по восстановлению пароля отправлена на ваш email'
-  subject_template_name = 'system/email/password_subject_reset_mail.txt'
-  email_template_name = 'system/email/password_reset_mail.html'
 
   def get_context_data(self, **kwargs):
     context = super().get_context_data(**kwargs)
@@ -68,8 +65,6 @@ class UserForgotPasswordView(SuccessMessageMixin, PasswordResetView):
 
 class UserPasswordResetConfirmView(SuccessMessageMixin, PasswordResetConfirmView):
   form_class = UserSetNewPasswordForm
-  template_name = 'system/user_password_set_new.html'
-  success_url = reverse_lazy('home')
   success_message = 'Пароль успешно изменен. Можете авторизоваться на сайте.'
 
   def get_context_data(self, **kwargs):
@@ -189,13 +184,13 @@ class RemoveMemberView(APIView):
 class ListMemberView(APIView):
     permission_classes = [IsAuthenticated | IsAdminUser]
 
-    @api_view(['GET'])
     def get(self, request, id):
         project = get_object_or_404(Project, id=id)
+
         if not Member.objects.filter(project=project, user=request.user).exists() and project.admin != request.user:
             return Response({"error": "Доступ запрещен"}, status=status.HTTP_403_FORBIDDEN)
         memberships = Member.objects.filter(project=project)
-        serializer = Member(memberships, many=True)
+        serializer = MemberSerializer(memberships, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class ProjectSummaryView(APIView):
