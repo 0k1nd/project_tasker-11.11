@@ -1,4 +1,4 @@
-from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
+from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView, PasswordResetDoneView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy
 from rest_framework import response
@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from .serializers import UserSerializer, ProjectTaskSerializer, TaskSerializer, CommentSerializer, ProjectTaskSerializer, ProjectUserSerializer, TaskCommentSerializer, ProjectSerializers
 from rest_framework_simplejwt.tokens import RefreshToken
-from .forms import UserForgotPasswordForm, UserSetNewPasswordForm, ProjectForm
+from .forms import UserForgotPasswordForm, UserSetNewPasswordForm, ProjectForm, UserPasswordResetDoneForm
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
@@ -56,15 +56,20 @@ class TokenObtainPairView(APIView):
 
 class UserForgotPasswordView(SuccessMessageMixin, PasswordResetView):
   form_class = UserForgotPasswordForm
-  success_message = 'Письмо с инструкцией по восстановлению пароля отправлена на ваш email'
+  success_url = reverse_lazy('password_reset/done/')
 
   def get_context_data(self, **kwargs):
     context = super().get_context_data(**kwargs)
     context['title'] = 'Запрос на восстановление пароля'
     return context
 
+class UserPasswordResetDoneView(SuccessMessageMixin, PasswordResetDoneView):
+    form_class = UserPasswordResetDoneForm
+    success_url = 'password_reset/done/'
+
 class UserPasswordResetConfirmView(SuccessMessageMixin, PasswordResetConfirmView):
   form_class = UserSetNewPasswordForm
+  success_url = 'password_reset/done/'
   success_message = 'Пароль успешно изменен. Можете авторизоваться на сайте.'
 
   def get_context_data(self, **kwargs):
@@ -194,26 +199,35 @@ class ListMemberView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class ProjectSummaryView(APIView):
-    permission_classes = [IsAuthenticated | IsAdminUser]
+    permission_classes = [AllowAny]
 
     def get(self, request, id):
+        # tasks_by_status = {
+        #     'new': Task.objects.filter(project=project, status='new').count(),
+        #     'in_progress': Task.objects.filter(project=project, status='in_progress').count(),
+        #     'done': Task.objects.filter(project=project, status='done').count(),
+        # }
+        # total_tasks = project.tasks.count()
+        # active_members = User.objects.filter(member__project=project).distinct()
+        # active_members_data = UserSerializer(active_members, many=True).data
+
         project = get_object_or_404(Project, id=id)
 
-        if not Member.objects.filter(project=project, user=request.user).exists() and project.owner != request.user:
-            return Response({"error": "Доступ запрещен"}, status=404)
+        new = {}
+        tasks = project.tasks.all()
+        print(tasks)
+        # tasks = TaskSerializer(tasks, many=True)
+        # for task in tasks:
+            # task.status == "new":
 
-        total_tasks = project.tasks.count()
+
         summary_data = {
-            'total_tasks': total_tasks,
-            'tasks_by_status': {
-                'new': project.tasks.filter(status='new').count(),
-                'in_progress': project.tasks.filter(status='in_progress').count(),
-                'done': project.tasks.filter(status='done').count(),
-            },
-            'active_members': UserSerializer(active_members, many=True).data,
+            'total_tasks': tasks,
+            # 'tasks_by_status': task.status,
+        # #     'active_members': active_members_data,
         }
-        serializer = ProjectSummarySerializer(summary_data)
-        return Response(serializer.data, status=200)
+        # # serializer = ProjectSummarySerializer(summary_data)
+        return Response(summary_data, status=status.HTTP_200_OK)
 
 class OneProjectViewSet(ModelViewSet):
     queryset = Project.objects.all()

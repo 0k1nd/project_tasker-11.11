@@ -1,5 +1,7 @@
 from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
 from django import forms
+from django.contrib.auth.views import PasswordResetDoneView
+
 from .models import Project, Member
 
 class ProjectForm(forms.ModelForm):
@@ -8,6 +10,15 @@ class ProjectForm(forms.ModelForm):
         fields = ['name', 'description']
 
 class UserForgotPasswordForm(PasswordResetForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields:
+            self.fields[field].widget.attrs.update({
+                'class': 'form-control',
+                'autocomplete': 'off'
+            })
+
+class UserPasswordResetDoneForm(PasswordResetForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields:

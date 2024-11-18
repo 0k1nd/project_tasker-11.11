@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenVerifyView
-from .views import RegistrationAPIView, TokenObtainPairView, UserForgotPasswordView, UserPasswordResetConfirmView, edit_project, list_projects, create_project, project_detail, update_project, delete_project, AddMemberView, RemoveMemberView, ListMemberView, ProjectSummaryView
+from .views import RegistrationAPIView, TokenObtainPairView, UserForgotPasswordView, UserPasswordResetConfirmView, edit_project, list_projects, create_project, project_detail, update_project, delete_project, AddMemberView, RemoveMemberView, ListMemberView, ProjectSummaryView, UserPasswordResetDoneView
 from .views import TaskViewSet, CommentViewSet, ProjectViewSet, OneProjectViewSet
 app_name = "user"
 
@@ -17,6 +17,7 @@ urlpatterns = [
     path('login/', TokenObtainPairView.as_view(), name="login"),
     path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     path('password-reset/', UserForgotPasswordView.as_view(), name='password_reset'),
+    path('password_reset/done/', UserPasswordResetDoneView.as_view(), name='password_reset_done'),
     path('set-new-password/<uidb64>/<token>/', UserPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('project/<int:project_id>/edit/', edit_project, name='edit_project'),
     path('projects/', list_projects, name='list_projects'),
@@ -27,7 +28,7 @@ urlpatterns = [
     path('projects/<int:id>/add_member/', AddMemberView.as_view(), name='add_member'),
     path('projects/<int:id>/remove_member/', RemoveMemberView.as_view(), name='remove_member'),
     path('projects/<int:id>/members/', ListMemberView.as_view(), name='list_members'),
-    path('projects/<int:id>/summary/', ProjectSummaryView.as_view(), name='project_summary_by_status'),
+    path('projects/summary/<int:id>/', ProjectSummaryView.as_view(), name='project_summary_by_status'),
 ]
 
 urlpatterns += router.urls
