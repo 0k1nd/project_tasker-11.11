@@ -38,8 +38,8 @@ class Task(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE,blank=True,null=True, related_name="tasks")
     name = models.CharField(max_length=150)
     description = models.TextField()
-    status = models.TextField(choices=STATUS_CHOICES)
-    assignee = models.ForeignKey(User, models.SET_NULL,blank=True,null=True)
+    status = models.CharField(max_length=150, choices=STATUS_CHOICES)
+    assignee = models.ManyToManyField(Account, related_name='pined_task', blank=True,null=True)
     created_at = models.DateTimeField(blank=True, null=True, default=timezone.now)
     updated_at = models.DateTimeField(auto_now_add=True)
 

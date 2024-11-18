@@ -4,6 +4,7 @@ from myapp.models import Task, Comment, Project, Account
 
 
 class TaskSerializer(ModelSerializer):
+
     class Meta:
         model = Task
         fields = '__all__'
@@ -17,7 +18,7 @@ class CommentSerializer(ModelSerializer):
 class UserSerializer(ModelSerializer):
     class Meta:
         model = Account
-        fields = ['username', 'email']
+        fields = ['username', 'email', 'pined_task']
 
 
 class ProjectTaskSerializer(ModelSerializer):
@@ -47,12 +48,17 @@ class ProjectUserSerializer(ModelSerializer):
 class ProjectSerializer(ModelSerializer):
     projects_task = serializers.IntegerField(read_only=True)
     projects_user = serializers.IntegerField(read_only=True)
+    task_now = serializers.IntegerField(read_only=True)
+    task_done = serializers.IntegerField(read_only=True)
+    task_in_progress = serializers.IntegerField(read_only=True)
+    project_tasks = serializers.IntegerField(read_only=True)
+    without_ass = serializers.IntegerField(read_only=True)
     editors = UserSerializer(many=True)
     tasks = TaskSerializer(many=True)
     
     class Meta:
         model = Project
-        fields = ['id', 'name', 'description','projects_task', 'projects_user', 'editors', 'tasks', 'owner']
+        fields = '__all__'
 
     def get_editors(self):
         return Account.objects.filter(editable_objects=model.id)
@@ -66,7 +72,7 @@ class TaskCommentSerializer(ModelSerializer):
 
     class Meta:
         model = Task
-        fields = '__all__'
+        fields = ['id', 'name', 'description', 'comments']
 
-    def get_editors(self):
-        return Account.objects.filter(editable_objects=model.id)
+    def get_comments(self):
+        return Comment.objects.filter(task=model.id)
