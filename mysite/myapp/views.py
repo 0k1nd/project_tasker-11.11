@@ -9,16 +9,7 @@ from django.contrib.auth.decorators import user_passes_test
 from myapp.serializers import TaskSerializer, CommentSerializer, ProjectTaskSerializer, ProjectUserSerializer, ProjectSerializer, TaskCommentSerializer
 from myapp.models import Task, Comment, Project, Account
 from django.db.models import Count
-
-
-def user_required():
-    def in_groups(user_required):
-        if user_required.is_authenticated():
-            if Account.objects.filter(project=model.id) | user_required.is_superuser:
-                return True
-        return False
-
-    return user_passes_test(in_groups)
+from django.contrib.auth.models import AbstractUser
 
 
 #from myapp.permissions import IsEditor
@@ -48,14 +39,19 @@ class ProjectViewSet(ModelViewSet):
     queryset = Project.objects.all().annotate(
         projects_task = Count('tasks'), projects_user=Count('editors')
     )
+    
+    @action(detail=False, url_path="tasks_with_annotated")
+    def list_tasks_with_annotated(self, request):
+        queryset = Project.objects.all()
+        serializer = ProjectTaskSerializer(queryset, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, url_path="tasks")
-    def list_projects(self, request, pk):
-        project = Project.objects.get(pk=pk)
+    def list_tasks(self, request):
         if request.user.is_authenticated:
             if request.user.is_superuser:
-                tasks = Task.objects.filter(project=project)
-                serializer = TaskSerializer(tasks, many=True)
+                queryset = Project.objects.all()
+                serializer = ProjectTaskSerializer(queryset, many=True)
                 return Response(serializer.data)
             else:
                 return HttpResponse("вас нет в этом проекте")
@@ -65,7 +61,7 @@ class ProjectViewSet(ModelViewSet):
 
     @action(detail=False, url_path="users")
     def list_users(self, request, pk):
-        queryset = Project.objects.filters(pk=pk)
+        queryset = Project.objects.all()
         serializer = ProjectUserSerializer(queryset, many=True)
         return Response(serializer.data)
 

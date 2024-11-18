@@ -18,6 +18,7 @@ STATUS_CHOICES =(
 )
 
 class Project(models.Model):
+    id = models.AutoField(auto_created=True, primary_key=True, verbose_name='id')
     name = models.CharField(max_length=15)
     description = models.TextField()
     created_at = models.DateTimeField(blank=True, null=True)
@@ -33,6 +34,7 @@ class Project(models.Model):
 
 
 class Task(models.Model):
+    id = models.AutoField(auto_created=True, primary_key=True, verbose_name='id')
     project = models.ForeignKey(Project, on_delete=models.CASCADE,blank=True,null=True, related_name="tasks")
     name = models.CharField(max_length=150)
     description = models.TextField()

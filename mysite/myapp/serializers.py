@@ -14,7 +14,7 @@ class CommentSerializer(ModelSerializer):
         model = Comment
         fields = '__all__'
 
-class AccountSerializer(ModelSerializer):
+class UserSerializer(ModelSerializer):
     class Meta:
         model = Account
         fields = ['username', 'email']
@@ -25,7 +25,7 @@ class ProjectTaskSerializer(ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ['id', 'name', 'tasks','editors', 'description']
+        fields = ['id', 'name', 'tasks', 'description']
         annotated_tasks = serializers.IntegerField(read_only=True)
 
     def get_tasks(self):
@@ -33,7 +33,7 @@ class ProjectTaskSerializer(ModelSerializer):
 
 
 class ProjectUserSerializer(ModelSerializer):
-    editors = AccountSerializer(many=True)
+    editors = UserSerializer(many=True)
 
     class Meta:
         model = Project
@@ -43,12 +43,23 @@ class ProjectUserSerializer(ModelSerializer):
         return Account.objects.filter(project=model.id)
 
 
+
 class ProjectSerializer(ModelSerializer):
     projects_task = serializers.IntegerField(read_only=True)
     projects_user = serializers.IntegerField(read_only=True)
+    editors = UserSerializer(many=True)
+    tasks = TaskSerializer(many=True)
+    
     class Meta:
         model = Project
-        fields = ['id', 'name', 'description','projects_task', 'projects_user', 'owner']
+        fields = ['id', 'name', 'description','projects_task', 'projects_user', 'editors', 'tasks', 'owner']
+
+    def get_editors(self):
+        return Account.objects.filter(editable_objects=model.id)
+
+    def get_tasks(self):
+        return Task.objects.filter(project=model.id)
+        
 
 class TaskCommentSerializer(ModelSerializer):
     comments = CommentSerializer(many=True)
@@ -58,4 +69,4 @@ class TaskCommentSerializer(ModelSerializer):
         fields = '__all__'
 
     def get_editors(self):
-        return Account.objects.filter(comments=model.id)
+        return Account.objects.filter(editable_objects=model.id)
