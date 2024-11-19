@@ -1,6 +1,6 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from django.db.models import Count
+from django.db.models import Count, Case, When
 from myapp.models import Task, Comment, Project, Account
 import django_filters.rest_framework
 from django.http import JsonResponse
@@ -98,11 +98,27 @@ def task_comments(request, pk):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
-def tasks_report(request, pk):
-    queryset = Project.objects.filter(pk=pk).annotate(
-        task_in_progress=Count(Task.objects.filter(status=in_progress)), task_done=Count(Task.objects.filter(status=done)), task_new=Count(Task.objects.filter(status=new)),withoutass=(Task.objects.filter(assignee__isnull=True)), projects_task = Count('tasks')
-    )
-    serializer = ProjectSerializer(queryset, many=True)
-    return Response(serializer.data)
+def tasks_report(request):
+    projects = Project.objects.all().annotate(
+        projects_task = Count('tasks'))
+    response = []
+    for project in projects:
+        progress_serializers = ProjectSerializer(project)
+        tasks_new = Task.objects.filter(status="new", project=project.pk)
+        new_serializers = TaskSerializer(tasks_new, many=True)
+        tasks_done = Task.objects.filter(status="done", project=project.pk)
+        done_serializers = TaskSerializer(tasks_done, many=True)
+        tasks_in_progress = Task.objects.filter(status="in_progress", project=project.pk)
+        in_progress_serializers = TaskSerializer(tasks_in_progress, many=True)
+        task_without_assignee = Task.objects.filter(assignee__isnull=True, project=project.pk)
+        task_without_assignee_serializers = TaskSerializer(task_without_assignee, many=True)
+        response.append({
+            "project": progress_serializers.data,
+            "new": new_serializers.data,
+            "done": done_serializers.data,
+            "in_progress": in_progress_serializers.data,
+            "without_assignee": task_without_assignee_serializers.data
+        })
+    return Response(response)
                                
         
