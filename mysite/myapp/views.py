@@ -1,6 +1,4 @@
-from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView, PasswordResetDoneView
 from django.contrib.messages.views import SuccessMessageMixin
-from django.urls import reverse_lazy
 from rest_framework import response
 from rest_framework.authtoken.admin import User
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAuthenticated
@@ -10,7 +8,7 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from .serializers import UserSerializer, ProjectTaskSerializer, TaskSerializer, CommentSerializer, ProjectTaskSerializer, ProjectUserSerializer, TaskCommentSerializer, ProjectSerializers
 from rest_framework_simplejwt.tokens import RefreshToken
-from .forms import ProjectForm
+from .forms import ProjectForm, CustomPasswordResetForm, CustomSetPasswordForm
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
@@ -24,6 +22,8 @@ from rest_framework.permissions import IsAdminUser
 from django.contrib.auth.decorators import user_passes_test
 from myapp.models import Task, Comment, Project, Member
 from django.db.models import Count
+from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
+from django.urls import reverse_lazy
 
 class RegistrationAPIView(APIView):
 
@@ -225,4 +225,18 @@ class OneProjectViewSet(ModelViewSet):
         queryset = Project.objects.filters(pk=pk)
         serializer = ProjectUserSerializer(queryset, many=True)
         return Response(serializer.data)
+
+class CustomPasswordResetView(PasswordResetView):
+    form_class = CustomPasswordResetForm
+    success_url = reverse_lazy('password_reset_done')
+
+class CustomPasswordResetDoneView(PasswordResetDoneView):
+    pass
+
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    form_class = CustomSetPasswordForm
+    success_url = reverse_lazy('password_reset_complete')
+
+class CustomPasswordResetCompleteView(PasswordResetCompleteView):
+    pass
 
