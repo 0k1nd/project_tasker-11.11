@@ -19,6 +19,7 @@ class Member(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, related_name='members', on_delete=models.CASCADE)
     role = models.CharField(max_length=100, choices=[('Admin', 'Admin'), ('Member', 'Member')], default='Member')
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return f'{self.user.username} - {self.project.name}'

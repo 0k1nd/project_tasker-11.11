@@ -27,6 +27,9 @@ from django.urls import reverse_lazy
 from django.http import JsonResponse
 from django.core.mail import EmailMessage, get_connection
 from django.conf import settings
+from django.core.mail import send_mail
+from django.http import JsonResponse
+from .serializers import MemberSerializer
 
 class RegistrationAPIView(APIView):
 
@@ -179,31 +182,26 @@ class ProjectSummaryView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, id):
-        # tasks_by_status = {
-        #     'new': Task.objects.filter(project=project, status='new').count(),
-        #     'in_progress': Task.objects.filter(project=project, status='in_progress').count(),
-        #     'done': Task.objects.filter(project=project, status='done').count(),
-        # }
-        # total_tasks = project.tasks.count()
-        # active_members = User.objects.filter(member__project=project).distinct()
-        # active_members_data = UserSerializer(active_members, many=True).data
-
         project = get_object_or_404(Project, id=id)
-
-        new = {}
         tasks = project.tasks.all()
-        print(tasks)
-        # tasks = TaskSerializer(tasks, many=True)
-        # for task in tasks:
-            # task.status == "new":
+        tasks_by_status = tasks.values('status').annotate(count=Count('status'))
+        tasks_status_summary = {
+            "new": 0,
+            "in_progress": 0,
+            "done": 0,
+        }
+        for item in tasks_by_status:
+            tasks_status_summary[item['status']] = item['count']
 
+        active_members = project.members.filter(is_active=True)
+        active_members_data = MemberSerializer(active_members, many=True).data
 
         summary_data = {
-            'total_tasks': tasks,
-            # 'tasks_by_status': task.status,
-        # #     'active_members': active_members_data,
+            'total_tasks': tasks.count(),
+            'tasks_by_status': tasks_status_summary,
+            'active_members': active_members_data,
         }
-        # # serializer = ProjectSummarySerializer(summary_data)
+
         return Response(summary_data, status=status.HTTP_200_OK)
 
 class OneProjectViewSet(ModelViewSet):
