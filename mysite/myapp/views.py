@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from .serializers import UserSerializer, ProjectTaskSerializer, TaskSerializer, CommentSerializer, ProjectTaskSerializer, ProjectUserSerializer, TaskCommentSerializer, ProjectSerializers
 from rest_framework_simplejwt.tokens import RefreshToken
-from .forms import UserForgotPasswordForm, UserSetNewPasswordForm, ProjectForm
+from .forms import ProjectForm
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
@@ -53,17 +53,6 @@ class TokenObtainPairView(APIView):
         'access': str(refresh.access_token),
       })
     return response.Response({'error': 'Поля email и пароль обязательны!'}, status=status.HTTP_401_UNAUTHORIZED)
-
-class UserForgotPasswordView(SuccessMessageMixin, PasswordResetView):
-    form_class = UserForgotPasswordForm
-    success_url = reverse_lazy('user_app:user_app:password_reset_done')
-
-class UserPasswordResetConfirmView(SuccessMessageMixin, PasswordResetConfirmView):
-    success_url = reverse_lazy('user_app:reset/done/')
-    form_class = UserSetNewPasswordForm
-
-#from myapp.permissions import IsEditor
-
 
 class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
