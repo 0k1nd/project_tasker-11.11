@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from .serializers import UserSerializer, ProjectTaskSerializer, TaskSerializer, CommentSerializer, ProjectTaskSerializer, ProjectUserSerializer, TaskCommentSerializer, ProjectSerializers
 from rest_framework_simplejwt.tokens import RefreshToken
-from .forms import ProjectForm, CustomPasswordResetForm, CustomSetPasswordForm
+from .forms import ProjectForm
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
@@ -24,6 +24,9 @@ from myapp.models import Task, Comment, Project, Member
 from django.db.models import Count
 from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
 from django.urls import reverse_lazy
+from django.http import JsonResponse
+from django.core.mail import EmailMessage, get_connection
+from django.conf import settings
 
 class RegistrationAPIView(APIView):
 
@@ -225,18 +228,3 @@ class OneProjectViewSet(ModelViewSet):
         queryset = Project.objects.filters(pk=pk)
         serializer = ProjectUserSerializer(queryset, many=True)
         return Response(serializer.data)
-
-class CustomPasswordResetView(PasswordResetView):
-    form_class = CustomPasswordResetForm
-    success_url = reverse_lazy('password_reset_done')
-
-class CustomPasswordResetDoneView(PasswordResetDoneView):
-    pass
-
-class CustomPasswordResetConfirmView(PasswordResetConfirmView):
-    form_class = CustomSetPasswordForm
-    success_url = reverse_lazy('password_reset_complete')
-
-class CustomPasswordResetCompleteView(PasswordResetCompleteView):
-    pass
-
