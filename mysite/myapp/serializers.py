@@ -16,7 +16,7 @@ class MemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Member
-        fields = ['user', 'project', 'role','pined_task']
+        fields = ['user', 'editable_objects', 'role','pined_task']
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):

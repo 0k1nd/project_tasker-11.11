@@ -6,7 +6,7 @@ import django_filters.rest_framework
 from django.http import JsonResponse
 
 from rest_framework import status
-from myapp.serializers import TaskSerializer, CommentSerializer, ProjectTaskSerializer, ProjectUserSerializer, ProjectSerializer, TaskCommentSerializer, UserSerializer
+from myapp.serializers import TaskSerializer, CommentSerializer, ProjectTaskSerializer, ProjectSerializer, TaskCommentSerializer, UserSerializer
 
 @api_view()
 def project_detail(request, pk):
