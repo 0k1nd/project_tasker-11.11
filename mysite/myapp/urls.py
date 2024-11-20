@@ -25,7 +25,7 @@ schema_view = get_schema_view(
 )
 
 router = DefaultRouter()
-router.register(r'tasks_filter', TaskViewSet)
+router.register(r'tasks', TaskViewSet)
 
 
 

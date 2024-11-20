@@ -57,9 +57,14 @@ class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['status', 'project', 'created_at', 'assignee']
+    filterset_fields = ['status', 'assignee', 'created_at']
     search_fields = ['created_at', 'assignee.id']
-    ordering_fields = []
+
+    @action(detail=True, url_path='filters')
+    def list_filters(self, request, pk):
+        queryset = Task.objects.filter(project=pk)  # Fetch the product by ID
+        serializer = TaskCommentSerializer(queryset, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, url_path="comments")
     def list_comments(self, request):
