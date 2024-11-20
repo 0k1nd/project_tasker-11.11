@@ -49,6 +49,7 @@ urlpatterns = [
     path('projects/summary/<int:id>/', ProjectSummaryView.as_view(), name='project_summary_by_status'),
     path('projects/<int:pk>/detail/', views_2.project_detail, name='project_detail'),
     path('projects/<int:pk>/tasks/', views_2.project_task, name='project_task'),
+    path('comments/<int:pk>/', views_2.comment_actions, name='comment_actions'),
     path('projects/<int:pk>/create_task/', views_2.project_task, name='project_create_task'),
     path('task/<int:pk>/actions/', views_2.task_actions, name='task_detail'),
     path('tasks/<int:pk>/change_status/', views_2.change_status, name='task_change_status'),
@@ -61,7 +62,6 @@ urlpatterns = [
 ]
 
 urlpatterns += router.urls
-
 
 
 

@@ -127,5 +127,15 @@ def filter_tasks(request, pk):
         }, status=status.HTTP_204_NO_CONTENT)
     tasks_serializer = TaskSerializer(queryset, many=True)
     return Response(tasks_serializer)
+
+@api_view(['GET', 'DELETE'])
+def comment_actions(request, pk,):
+    if request.method == 'GET':
+        queryset = Comment.objects.filter(id=pk)
+        serializer = CommentSerializer(queryset, many=True)
+        return Response(serializer.data)
+    elif request.method == 'DELETE':
+        comment.delete()
+        return HttpResponse(status=status.HTTP_204_NO_CONTENT)
                                
         
