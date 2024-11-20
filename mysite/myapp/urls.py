@@ -1,5 +1,5 @@
 from rest_framework.routers import DefaultRouter
-from .views import TaskViewSet, CommentViewSet, ProjectViewSet
+from .views import TaskViewSet
 from . import views_2
 from django.urls import path, re_path
 from rest_framework import permissions
@@ -20,9 +20,7 @@ schema_view = get_schema_view(
 )
 
 router = DefaultRouter()
-router.register(r'tasks', TaskViewSet)
-router.register(r'comments', CommentViewSet)
-router.register(r'projects', ProjectViewSet, basename='allprogects')
+router.register(r'tasks_filter', TaskViewSet)
 
 
 urlpatterns = [

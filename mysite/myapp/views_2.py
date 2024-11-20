@@ -4,6 +4,7 @@ from django.db.models import Count, Case, When
 from myapp.models import Task, Comment, Project, Account
 import django_filters.rest_framework
 from django.http import JsonResponse
+from rest_framework import status
 from myapp.serializers import TaskSerializer, CommentSerializer, ProjectTaskSerializer, ProjectUserSerializer, ProjectSerializer, TaskCommentSerializer, UserSerializer
 
 @api_view()
@@ -42,21 +43,6 @@ def task_actions(request, pk,):
     elif request.method == 'DELETE':
         task.delete()
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)
-
-@api_view(['GET'])
-def filter_tasks(request, pk):
-    status = request.GET.get('status')
-    assignee = request.GET.get('assignee')
-    created_at = request.GET.get('created_at__gte')
-    queryset = Task.objects.filter(project=pk)
-    if status:
-        queryset = queryset.filter(status=status)
-    if assignee:
-        queryset = queryset.filter(assignee=assignee)
-    if created_at:
-        queryset = queryset.filter(created_at__gte=created_at)
-    tasks = list(queryset.values())
-    return JsonResponse(tasks, safe=False)
 
 @api_view(['GET', 'PATCH'])
 def change_status(request, pk):
@@ -120,5 +106,25 @@ def tasks_report(request):
             "without_assignee": task_without_assignee_serializers.data
         })
     return Response(response)
+
+
+@api_view(['GET'])
+def filter_tasks(request, pk):
+    queryset = Task.objects.filter(project=pk)
+    status_parm = request.GET.get('status')
+    assignee_parm = request.GET.get('assignee')
+    created_at_parm = request.GET.get('created_at__gte')
+    if status:
+        queryset = queryset.filter(status=status_parm)
+    if assignee:
+        queryset = queryset.filter(assignee=assignee_parm)
+    if created_at:
+        queryset = queryset.filter(created_at__gte=created_at_parm)
+    if not queryset.exists():
+        return Response({
+            "massage": "no task found"
+        }, status=status.HTTP_204_NO_CONTENT)
+    tasks_serializer = TaskSerializer(queryset, many=True)
+    return Response(tasks_serializer)
                                
         

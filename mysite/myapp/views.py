@@ -19,7 +19,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['status', 'project']
+    filterset_fields = ['status', 'project', 'created_at']
     search_fields = ['created_at', 'assignee.id']
     ordering_fields = []
 
@@ -30,7 +30,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class CommentViewSet(ModelViewSet):
+'''class CommentViewSet(ModelViewSet):
     serializer_class = CommentSerializer
     queryset = Comment.objects.all()
 
@@ -65,3 +65,4 @@ class ProjectViewSet(ModelViewSet):
         serializer = ProjectUserSerializer(queryset, many=True)
         return Response(serializer.data)
 
+'''
