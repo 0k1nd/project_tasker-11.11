@@ -1,12 +1,12 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.db.models import Count, Case, When
-from myapp.models import Task, Comment, Project, Member
+from .models import Task, Comment, Project, Member
 import django_filters.rest_framework
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 
 from rest_framework import status
-from myapp.serializers import TaskSerializer, CommentSerializer, ProjectTaskSerializer, ProjectSerializer, TaskCommentSerializer, UserSerializer
+from .serializers import TaskSerializer, CommentSerializer, ProjectTaskSerializer, ProjectSerializer, TaskCommentSerializer, UserSerializer
 
 @api_view()
 def project_detail(request, pk):

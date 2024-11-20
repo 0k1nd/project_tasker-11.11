@@ -70,7 +70,7 @@ class TaskViewSet(viewsets.ModelViewSet):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated | IsAdminUser])
 def create_project(request):
-    serializer = ProjectSerializers(data=request.data)
+    serializer = ProjectSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save(owner=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -98,10 +98,10 @@ class ProjectViewSet(ModelViewSet):
                 return Response(serializer.data)
             else:
                 return HttpResponse("вас нет в этом проекте")
-            
+
 @login_required
 def edit_project(request, project_id):
-    project = Project.objects.get(id=project_id)
+    project = get_object_or_404(Project, id=project_id)
     if request.user == project.owner:
         if request.method == 'POST':
             form = ProjectForm(request.POST, instance=project)
@@ -109,52 +109,67 @@ def edit_project(request, project_id):
                 form.save()
                 return redirect('project_detail', project_id=project.id)
         else:
-            return redirect('permission_denied')
+            return redirect('edit_project', project_id=project.id)
     else:
-        return redirect('permission_denied')
+        return redirect('edit_project')
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated | IsAdminUser])
 def list_projects(request):
     projects = Project.objects.filter(owner=request.user)
-    serializer = ProjectSerializers(projects, many=True)
+    serializer = ProjectSerializer(projects, many=True)
     return Response(serializer.data)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated | IsAdminUser])
 def project_detail(request, pk):
     project = get_object_or_404(Project, pk=pk, owner=request.user)
-    serializer = ProjectSerializers(project)
+    serializer = ProjectSerializer(project)
     return Response(serializer.data)
 
 @api_view(['PUT', 'PATCH'])
 @permission_classes([IsAuthenticated | IsAdminUser])
 def update_project(request, pk):
     project = get_object_or_404(Project, pk=pk, owner=request.user)
-    serializer = ProjectSerializers(project, data=request.data, partial=True)  # partial=True для PATCH-запроса
+    serializer = ProjectSerializer(project, data=request.data, partial=True)  # partial=True для PATCH-запроса
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+# @api_view(['DELETE'])
+# @permission_classes([IsAuthenticated | IsAdminUser])
+# def delete_project(request, pk, project_id):
+#     project = get_object_or_404(Project, owner=request.user, pk=pk, id=project_id)
+#     project.delete()
+#     return Response(status=status.HTTP_204_NO_CONTENT)
+
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated | IsAdminUser])
+@permission_classes([IsAuthenticated])
 def delete_project(request, pk):
-    project = get_object_or_404(Project, pk=pk, owner=request.user)
+    # Получение объекта
+    project = get_object_or_404(Project, pk=pk)
+
+    # Проверка прав доступа
+    if not (request.user == project.owner or request.user.is_staff):
+        return Response({"detail": "You do not have permission to delete this project."},
+                        status=status.HTTP_403_FORBIDDEN)
+
+    # Удаление объекта
     project.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
+    return Response({"detail": "Project deleted successfully."},
+                    status=status.HTTP_204_NO_CONTENT)
 
 class AddMemberView(APIView):
     permission_classes = [IsAuthenticated | IsAdminUser]
 
     @api_view(['POST'])
     def post(self, request, id):
-        project = get_object_or_404(Project, id=id)
         email = request.data.get('email')
         user = get_object_or_404(User, email=email)
-        if Member.objects.filter(editable_object=project, user=user).exists():
+        if Member.objects.filter(user=user).exists():
             return Response({"error": "Пользователь уже участник проекта!"}, status=status.HTTP_400_BAD_REQUEST)
-        Member.objects.create(editable_object=project, user=user)
+        Member.objects.create(user=user)
         return Response({"message": "Пользователь успешно добавлен!"}, status=status.HTTP_201_CREATED)
 
 class RemoveMemberView(APIView):
