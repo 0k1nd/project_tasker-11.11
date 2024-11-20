@@ -1,15 +1,9 @@
 from django import forms
+from django.contrib.auth.views import SetPasswordForm, PasswordResetForm
 
-from myapp.models import Task, Project
+from .models import Project, Member
 
-from django import forms
-
-class PostFormProject(forms.ModelForm):
+class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
-        fields = ('name', 'description', 'editors')
-
-class PostForm(forms.ModelForm):
-    class Meta:
-        model = Task
-        fields = ('name', 'description', 'status')
+        fields = ['name', 'description']

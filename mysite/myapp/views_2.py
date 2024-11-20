@@ -1,9 +1,10 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.db.models import Count, Case, When
-from myapp.models import Task, Comment, Project, Account
+from myapp.models import Task, Comment, Project, Member
 import django_filters.rest_framework
 from django.http import JsonResponse
+
 from rest_framework import status
 from myapp.serializers import TaskSerializer, CommentSerializer, ProjectTaskSerializer, ProjectUserSerializer, ProjectSerializer, TaskCommentSerializer, UserSerializer
 
@@ -60,7 +61,7 @@ def change_status(request, pk):
 @api_view(['GET', 'PATCH'])
 def change_assign(request, pk):
     if request.method == 'GET':
-        queryset = Account.objects.filter(pined_task=pk)
+        queryset = Member.objects.filter(pined_task=pk)
         serializer = UserSerializer(queryset, many=True)
         return Response(serializer.data)
     elif request.method == 'PATCH':
