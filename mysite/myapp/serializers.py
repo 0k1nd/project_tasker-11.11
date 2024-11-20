@@ -16,7 +16,7 @@ class MemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Member
-        fields = ['user', 'role']
+        fields = ['id','user', 'role']
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):

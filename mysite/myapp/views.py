@@ -57,7 +57,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['status', 'project', 'created_at']
+    filterset_fields = ['status', 'project', 'created_at', 'assignee']
     search_fields = ['created_at', 'assignee.id']
     ordering_fields = []
 

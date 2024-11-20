@@ -61,15 +61,18 @@ def change_status(request, pk):
 @api_view(['GET', 'PATCH'])
 def change_assign(request, pk):
     if request.method == 'GET':
-        queryset = Member.objects.filter(pined_task=pk)
-        serializer = UserSerializer(queryset, many=True)
+        queryset = Task.objects.filter(pk=pk)
+        serializer = TaskSerializer(queryset, many=True)
         return Response(serializer.data)
     elif request.method == 'PATCH':
-        serializer = TaskSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        dg = request.data
+        id_assignee = dg.get("id_assignee")
+        task = Task.objects.get(pk=pk)
+        member = Member.objects.get(id=id_assignee)
+        
+        a = task.assignee.add(member.id)
+        return Response(a, status=status.HTTP_201_CREATED)
+        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 @api_view(['GET', 'POST'])
 def task_comments(request, pk):
