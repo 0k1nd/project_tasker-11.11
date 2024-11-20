@@ -9,14 +9,14 @@ from django.db.models import F
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username', 'email', 'password']
+        fields = ['username', 'email']
 
 class MemberSerializer(serializers.ModelSerializer):
     user = UserSerializer()
 
     class Meta:
         model = Member
-        fields = ['user', 'editable_objects', 'role','pined_task']
+        fields = ['user', 'role']
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):

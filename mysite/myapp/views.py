@@ -152,9 +152,9 @@ class AddMemberView(APIView):
         project = get_object_or_404(Project, id=id)
         email = request.data.get('email')
         user = get_object_or_404(User, email=email)
-        if Member.objects.filter(project=project, user=user).exists():
+        if Member.objects.filter(editable_object=project, user=user).exists():
             return Response({"error": "Пользователь уже участник проекта!"}, status=status.HTTP_400_BAD_REQUEST)
-        Member.objects.create(project=project, user=user)
+        Member.objects.create(editable_object=project, user=user)
         return Response({"message": "Пользователь успешно добавлен!"}, status=status.HTTP_201_CREATED)
 
 class RemoveMemberView(APIView):
