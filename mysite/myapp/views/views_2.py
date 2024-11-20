@@ -48,15 +48,15 @@ def task_actions(request, pk,):
 @api_view(['GET', 'PATCH'])
 def change_status(request, pk):
     if request.method == 'GET':
-        queryset = Task.status.filter(pk=pk)
-        serializer = TaskSerializer(queryset, many=True)
+        queryset = Task.objects.filter(pk=pk)
+        serializer = TaskSerializer(queryset)
         return Response(serializer.data)
     elif request.method == 'PATCH':
-        serializer = TaskSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        new_status = request.data.get("status")
+        task = Task.objects.get(pk=pk)
+        task.status = new_status
+        task.save()
+        return Response(status=status.HTTP_200_OK)
 
 @api_view(['GET', 'PATCH'])
 def change_assign(request, pk):
@@ -69,10 +69,8 @@ def change_assign(request, pk):
         id_assignee = dg.get("id_assignee")
         task = Task.objects.get(pk=pk)
         member = Member.objects.get(id=id_assignee)
-        
-        a = task.assignee.add(member.id)
-        return Response(a, status=status.HTTP_201_CREATED)
-        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        response = task.assignee.add(member.id)
+        return Response(response, status=status.HTTP_200_OK)
     
 @api_view(['GET', 'POST'])
 def task_comments(request, pk):
