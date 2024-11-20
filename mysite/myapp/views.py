@@ -6,7 +6,7 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
-from .serializers import UserSerializer, ProjectTaskSerializer, TaskSerializer, CommentSerializer, ProjectTaskSerializer, ProjectUserSerializer, TaskCommentSerializer, ProjectSerializers
+from .serializers import UserSerializer, ProjectTaskSerializer, TaskSerializer, CommentSerializer, ProjectTaskSerializer, TaskCommentSerializer, ProjectSerializer, MemberSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from .forms import ProjectForm
 from django.shortcuts import render, redirect
@@ -22,14 +22,7 @@ from rest_framework.permissions import IsAdminUser
 from django.contrib.auth.decorators import user_passes_test
 from myapp.models import Task, Comment, Project, Member
 from django.db.models import Count
-from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
-from django.urls import reverse_lazy
-from django.http import JsonResponse
-from django.core.mail import EmailMessage, get_connection
-from django.conf import settings
-from django.core.mail import send_mail
-from django.http import JsonResponse
-from .serializers import MemberSerializer
+
 
 class RegistrationAPIView(APIView):
 
@@ -64,7 +57,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['status']
+    filterset_fields = ['status', 'project']
     search_fields = ['created_at', 'assignee.id']
     ordering_fields = []
 
@@ -73,17 +66,6 @@ class TaskViewSet(viewsets.ModelViewSet):
         queryset = Task.objects.all()
         serializer = TaskCommentSerializer(queryset, many=True)
         return Response(serializer.data)
-
-
-class CommentViewSet(ModelViewSet):
-    serializer_class = CommentSerializer
-    queryset = Comment.objects.all()
-
-class ProjectViewSet(ModelViewSet):
-    serializer_class = ProjectTaskSerializer
-    queryset = Project.objects.all().annotate(
-        projects_task = Count('tasks'), projects_user=Count('editors')
-    )
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated | IsAdminUser])
@@ -204,25 +186,3 @@ class ProjectSummaryView(APIView):
 
         return Response(summary_data, status=status.HTTP_200_OK)
 
-class OneProjectViewSet(ModelViewSet):
-    queryset = Project.objects.all()
-    lookup_field = 'pk'
-
-    @action(detail=False, url_path="tasks")
-    def list_projects(self, request, pk):
-        model = Project
-        if request.user.is_authenticated:
-            if Account.objects.filter(editable_objects__id=4) or request.user.is_superuser:
-                queryset = Project.objects.get(pk=pk)
-                serializer = ProjectTaskSerializer(queryset, many=True)
-                return Response(serializer.data)
-            else:
-                return HttpResponse("вас нет в этом проекте")
-        else:
-            return HttpResponse("Пожалуйста, авторизуйтесь.")
-
-    @action(detail=False, url_path="users")
-    def list_users(self, request, pk):
-        queryset = Project.objects.filters(pk=pk)
-        serializer = ProjectUserSerializer(queryset, many=True)
-        return Response(serializer.data)

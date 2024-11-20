@@ -3,12 +3,20 @@ from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.models import User
 from myapp.models import Task, Comment, Project, Member
-
+from rest_framework import  serializers
+from django.db.models import F
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'email', 'password']
+
+class MemberSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+
+    class Meta:
+        model = Member
+        fields = ['user', 'project', 'role','pined_task']
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -22,31 +30,37 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         return data
 
-class ProjectSerializers(serializers.ModelSerializer):
+class TaskSerializer(ModelSerializer):
+    assignee  = MemberSerializer(many=True)
+    class Meta:
+        model = Task
+        fields = ['id', 'name', 'description', 'assignee']
+
+class ProjectSerializer(ModelSerializer):
     projects_task = serializers.IntegerField(read_only=True)
     projects_user = serializers.IntegerField(read_only=True)
+    task_new = serializers.IntegerField(read_only=True)
+    task_done = serializers.IntegerField(read_only=True)
+    task_in_progress = serializers.IntegerField(read_only=True)
+    editors = MemberSerializer(many=True)
+    tasks = TaskSerializer(many=True)
+
     class Meta:
         model = Project
-        fields = '__all__'
+        fields = ['name', 'id', 'updated_at', 'projects_task', 'task_new', 'task_done', 'task_in_progress', 'tasks',
+                  'projects_user', 'editors']
 
-class MemberSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
+    def get_editors(self):
+        return Member.objects.filter(editable_objects=model.id)
 
-    class Meta:
-        model = Member
-        fields = ['user', 'project', 'role']
+    def get_tasks(self):
+        return Task.objects.filter(project=model.id)
+
 
 class ProjectSummarySerializer(serializers.Serializer):
     total_tasks = serializers.IntegerField()
     tasks_by_status = serializers.DictField(child=serializers.IntegerField())
     active_members = UserSerializer(many=True)
-
-
-class TaskSerializer(ModelSerializer):
-    class Meta:
-        model = Task
-        fields = '__all__'
-
 
 class CommentSerializer(ModelSerializer):
     class Meta:
@@ -59,22 +73,11 @@ class ProjectTaskSerializer(ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ['id', 'name', 'tasks','editors', 'description']
+        fields = ['id', 'name', 'tasks', 'description']
         annotated_tasks = serializers.IntegerField(read_only=True)
 
     def get_tasks(self):
         return Task.objects.filter(project=model.id)
-
-
-class ProjectUserSerializer(ModelSerializer):
-    editors = UserSerializer(many=True)
-
-    class Meta:
-        model = Project
-        fields = ['id', 'name', 'description', 'editors']
-
-    def get_editors(self):
-        return Account.objects.filter(project=model.id)
 
 
 
@@ -85,7 +88,5 @@ class TaskCommentSerializer(ModelSerializer):
         fields = '__all__'
         
     def get_comments(self):
-        return Comment.objects.filter(comments=model.id)
-
-
+        return Comment.objects.filter(task=model.id)
 
