@@ -48,8 +48,3 @@ class Comment(models.Model):
     author = models.ForeignKey(User, models.SET_NULL,blank=True,null=True)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-
-
-#
-#
-#

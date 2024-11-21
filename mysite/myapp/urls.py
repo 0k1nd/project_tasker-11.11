@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenVerifyView
-from .views import RegistrationAPIView, TokenObtainPairView, edit_project, list_projects, create_project, project_detail, update_project, delete_project, AddMemberView, RemoveMemberView, ListMemberView, ProjectSummaryView
+from .views import RegistrationAPIView, TokenObtainPairView, list_projects, create_project, project_detail, update_project, delete_project, AddMemberView, RemoveMemberView, ListMemberView, ProjectSummaryView
 from .views import TaskViewSet, CommentViewSet, ProjectViewSet, OneProjectViewSet
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
@@ -18,7 +18,6 @@ urlpatterns = [
     path('register/', RegistrationAPIView.as_view(), name="register"),
     path('accounts/login/', TokenObtainPairView.as_view(), name="login"),
     path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
-    path('project/<int:project_id>/edit/', edit_project, name='edit_project'),
     path('reset_password/', auth_views.PasswordResetView.as_view(), name='password_reset'),
     path('reset_password_sent/', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),
     path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),

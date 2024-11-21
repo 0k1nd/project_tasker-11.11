@@ -94,20 +94,6 @@ def create_project(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@login_required
-def edit_project(request, project_id):
-    project = Project.objects.get(id=project_id)
-    if request.user == project.owner:
-        if request.method == 'POST':
-            form = ProjectForm(request.POST, instance=project)
-            if form.is_valid():
-                form.save()
-                return redirect('project_detail', project_id=project.id)
-        else:
-            return redirect('permission_denied')
-    else:
-        return redirect('permission_denied')
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated | IsAdminUser])
 def list_projects(request):
@@ -212,7 +198,7 @@ class OneProjectViewSet(ModelViewSet):
     def list_projects(self, request, pk):
         model = Project
         if request.user.is_authenticated:
-            if Account.objects.filter(editable_objects__id=4) or request.user.is_superuser:
+            if User.objects.filter(editable_objects__id=4) or request.user.is_superuser:
                 queryset = Project.objects.get(pk=pk)
                 serializer = ProjectTaskSerializer(queryset, many=True)
                 return Response(serializer.data)
