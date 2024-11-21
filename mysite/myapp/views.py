@@ -6,7 +6,7 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
-from .serializers import UserSerializer, ProjectTaskSerializer, TaskSerializer, CommentSerializer, ProjectTaskSerializer, ProjectUserSerializer, TaskCommentSerializer, ProjectSerializers
+from .serializers import UserSerializer, ProjectTaskSerializer, TaskSerializer, CommentSerializer, ProjectTaskSerializer, TaskCommentSerializer, ProjectSerializer, MemberSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from .forms import ProjectForm
 from django.shortcuts import render, redirect
@@ -20,16 +20,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
 from django.contrib.auth.decorators import user_passes_test
-from myapp.models import Task, Comment, Project, Member
+from .models import Task, Comment, Project, Member
 from django.db.models import Count
-from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
-from django.urls import reverse_lazy
-from django.http import JsonResponse
-from django.core.mail import EmailMessage, get_connection
-from django.conf import settings
-from django.core.mail import send_mail
-from django.http import JsonResponse
-from .serializers import MemberSerializer
+
 
 class RegistrationAPIView(APIView):
 
@@ -64,7 +57,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['status']
+    filterset_fields = ['status', 'project', 'created_at', 'assignee']
     search_fields = ['created_at', 'assignee.id']
     ordering_fields = []
 
@@ -74,68 +67,94 @@ class TaskViewSet(viewsets.ModelViewSet):
         serializer = TaskCommentSerializer(queryset, many=True)
         return Response(serializer.data)
 
-
-class CommentViewSet(ModelViewSet):
-    serializer_class = CommentSerializer
-    queryset = Comment.objects.all()
-
-class ProjectViewSet(ModelViewSet):
-    serializer_class = ProjectTaskSerializer
-    queryset = Project.objects.all().annotate(
-        projects_task = Count('tasks'), projects_user=Count('editors')
-    )
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated | IsAdminUser])
 def create_project(request):
-    serializer = ProjectSerializers(data=request.data)
+    serializer = ProjectSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save(owner=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class ProjectViewSet(ModelViewSet):
+    serializer_class = ProjectSerializer
+    queryset = Project.objects.all().annotate(
+        projects_task = Count('tasks'), projects_user=Count('editors')
+    )
+    
+    @action(detail=False, url_path="tasks_with_annotated")
+    def list_tasks_with_annotated(self, request):
+        queryset = Project.objects.all()
+        serializer = ProjectTaskSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, url_path="tasks")
+    def list_tasks(self, request):
+        if request.user.is_authenticated:
+            if request.user.is_superuser:
+                queryset = Project.objects.all()
+                serializer = ProjectTaskSerializer(queryset, many=True)
+                return Response(serializer.data)
+            else:
+                return HttpResponse("вас нет в этом проекте")
+
+@login_required
+def edit_project(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+    if request.user == project.owner:
+        if request.method == 'POST':
+            form = ProjectForm(request.POST, instance=project)
+            if form.is_valid():
+                form.save()
+                return redirect('project_detail', project_id=project.id)
+        else:
+            return redirect('edit_project', project_id=project.id)
+    else:
+        return redirect('edit_project')
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated | IsAdminUser])
 def list_projects(request):
     projects = Project.objects.filter(owner=request.user)
-    serializer = ProjectSerializers(projects, many=True)
+    serializer = ProjectSerializer(projects, many=True)
     return Response(serializer.data)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated | IsAdminUser])
 def project_detail(request, pk):
     project = get_object_or_404(Project, pk=pk, owner=request.user)
-    serializer = ProjectSerializers(project)
+    serializer = ProjectSerializer(project)
     return Response(serializer.data)
 
 @api_view(['PUT', 'PATCH'])
 @permission_classes([IsAuthenticated | IsAdminUser])
 def update_project(request, pk):
     project = get_object_or_404(Project, pk=pk, owner=request.user)
-    serializer = ProjectSerializers(project, data=request.data, partial=True)  # partial=True для PATCH-запроса
+    serializer = ProjectSerializer(project, data=request.data, partial=True)  # partial=True для PATCH-запроса
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated | IsAdminUser])
+@permission_classes([IsAuthenticated])
 def delete_project(request, pk):
-    project = get_object_or_404(Project, pk=pk, owner=request.user)
+    project = get_object_or_404(Project, pk=pk)
+    if not (request.user == project.owner or request.user.is_staff):
+        return Response({"detail": "Недостаточно прав."}, status=status.HTTP_403_FORBIDDEN)
     project.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
+    return Response({"detail": "Проект успешно удален."}, status=status.HTTP_204_NO_CONTENT)
 
 class AddMemberView(APIView):
     permission_classes = [IsAuthenticated | IsAdminUser]
 
     @api_view(['POST'])
     def post(self, request, id):
-        project = get_object_or_404(Project, id=id)
         email = request.data.get('email')
         user = get_object_or_404(User, email=email)
-        if Member.objects.filter(project=project, user=user).exists():
+        if Member.objects.filter(user=user).exists():
             return Response({"error": "Пользователь уже участник проекта!"}, status=status.HTTP_400_BAD_REQUEST)
-        Member.objects.create(project=project, user=user)
+        Member.objects.create(user=user)
         return Response({"message": "Пользователь успешно добавлен!"}, status=status.HTTP_201_CREATED)
 
 class RemoveMemberView(APIView):
@@ -210,5 +229,5 @@ class OneProjectViewSet(ModelViewSet):
     @action(detail=False, url_path="users")
     def list_users(self, request, pk):
         queryset = Project.objects.filters(pk=pk)
-        serializer = ProjectUserSerializer(queryset, many=True)
+        serializer = UserSerializer(queryset, many=True)
         return Response(serializer.data)
