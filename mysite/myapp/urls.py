@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenVerifyView
-from .views import RegistrationAPIView, TokenObtainPairView, edit_project, list_projects, create_project, project_detail, update_project, delete_project, AddMemberView, RemoveMemberView, ListMemberView, ProjectSummaryView, TaskViewSet
+from .views import RegistrationAPIView, TokenObtainPairView, list_projects, create_project, project_detail, update_project, delete_project, AddMemberView, RemoveMemberView, ListMemberView, ProjectSummaryView, TaskViewSet
 from .views import TaskViewSet
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
