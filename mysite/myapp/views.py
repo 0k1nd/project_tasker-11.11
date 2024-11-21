@@ -98,20 +98,6 @@ class ProjectViewSet(ModelViewSet):
             else:
                 return HttpResponse("вас нет в этом проекте")
 
-@login_required
-def edit_project(request, project_id):
-    project = get_object_or_404(Project, id=project_id)
-    if request.user == project.owner:
-        if request.method == 'POST':
-            form = ProjectForm(request.POST, instance=project)
-            if form.is_valid():
-                form.save()
-                return redirect('project_detail', project_id=project.id)
-        else:
-            return redirect('edit_project', project_id=project.id)
-    else:
-        return redirect('edit_project')
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated | IsAdminUser])
 def list_projects(request):
@@ -130,7 +116,7 @@ def project_detail(request, pk):
 @permission_classes([IsAuthenticated | IsAdminUser])
 def update_project(request, pk):
     project = get_object_or_404(Project, pk=pk, owner=request.user)
-    serializer = ProjectSerializer(project, data=request.data, partial=True)  # partial=True для PATCH-запроса
+    serializer = ProjectSerializer(project, data=request.data, partial=True)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data)
