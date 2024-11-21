@@ -31,19 +31,27 @@ def project_task(request, pk):
 
 @api_view(['GET', 'PATCH', 'DELETE'])
 def task_actions(request, pk,):
-    if request.method == 'GET':
-        queryset = Task.objects.filter(project=pk)
-        serializer = TaskSerializer(queryset, many=True)
-        return Response(serializer.data)
-    elif request.method == 'PATCH':
-        serializer = TaskSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    elif request.method == 'DELETE':
-        task.delete()
-        return HttpResponse(status=status.HTTP_204_NO_CONTENT)
+    if request.user.is_authenticated:
+        if request.user.member__editable_objects==pk or request.user.is_superuser:
+            if request.method == 'GET':
+                queryset = Task.objects.filter(pk=pk)
+                serializer = TaskSerializer(queryset, many=True)
+                return Response(serializer.data)
+            elif request.method == 'PATCH':
+                serializer = TaskSerializer(data=request.data)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            elif request.method == 'DELETE':
+                task.delete()
+                return HttpResponse(status=status.HTTP_204_NO_CONTENT)
+        return Response({
+            "massege": 'пользователь не аутифицирован'
+        }, status=status.HTTP_401_UNAUTHORIZED)
+    return Response({
+        "massege": 'пользователь не аутифицирован'
+    }, status=status.HTTP_401_UNAUTHORIZED)
 
 @api_view(['GET', 'PATCH'])
 def change_status(request, pk):
